@@ -1,0 +1,38 @@
+TL_APP_SDK_DIR:=/root/pw/Hi3515/
+TL_APP_PUB_PATH:=$(TL_APP_SDK_DIR)/pub
+TL_APP_DRV_PATH:=$(TL_APP_SDK_DIR)/extdrv/
+TL_APP_MPP_PATH:=$(TL_APP_SDK_DIR)/mpp
+TL_APP_LIB_PATH:=$(TL_APP_MPP_PATH)/lib
+TL_APP_COMPONENT_PATH:=$(TL_APP_MPP_PATH)/lib
+	
+TL_APP_LIBS := $(TL_APP_LIB_PATH)/libmpi.a \
+	$(TL_APP_LIB_PATH)/lib_VoiceEngine.a \
+ 	$(TL_APP_LIB_PATH)/lib_amr_spc.a \
+	$(TL_APP_LIB_PATH)/lib_amr_fipop.a \
+	$(TL_APP_LIB_PATH)/lib_aec.a \
+	$(TL_APP_LIB_PATH)/lib_aacdec.a \
+	$(TL_APP_LIB_PATH)/lib_aacenc.a \
+	$(TL_APP_LIB_PATH)/libresampler.a \
+	$(TL_APP_LIB_PATH)/libloadbmp.a \
+	$(TL_APP_LIB_PATH)/libtde.a
+	
+TL_APP_INC_PATH:=-I$(PUB_PATH)/include \
+	-I$(TL_APP_PUB_PATH)/kbuild-FULL_REL/include \
+	-I$(TL_APP_MPP_PATH)/include \
+	-I$(TL_APP_MPP_PATH)/sample/common\
+	-I$(TL_APP_MPP_PATH)/sample \
+	-I$(TL_APP_DRV_PATH)
+
+
+DBG?=N
+ifeq ($(DBG),Y)
+export HI_MAKE_DBG:=HI_DEBUG
+export HI_SUPPORT_GDB:=YES
+else
+export HI_MAKE_DBG:=HI_RELEASE
+endif
+
+#only kernle need this
+#OSDRV:= 
+#DRV_PATH:=$(SDK_DIR)/$(OSDRV)/source/drv
+#LINUXROOT:=$(PUB_PATH)/kbuild-FULL_REL

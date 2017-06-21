@@ -1,0 +1,90 @@
+
+echo "Please select a product which you want to compile:"
+echo "6) NR3116"
+echo "7) NR2116"
+echo "8) NR3516/NR3524/NR3532"
+echo "9) NR1008/NR1004"
+echo "0) Exit"
+
+read -n 1 char
+
+cp -rf GuiSample1/makefile_common GuiSample1/makefile
+rm -f Common/lib/debug/*
+rm -f Common/lib/lib*.a
+rm -f Common/lib/tl_hslib_nvr.a
+rm -f Common/lib/onvif/libyzonvif.so
+
+rm -rf ./tmp.mak
+
+sync
+
+echo ""
+if [ "$char" == "6" ];then
+	echo "Build env for 3531"
+	\cp Makefile3531.param Makefile.param
+	echo "MMUCHIP=CHIP_HISI3531" >>./tmp.mak
+	echo "3531 environment built"
+	echo -e ""
+	echo -e ""
+fi
+
+if [ "$char" == "7" ];then
+	echo "Build env for R21xx"
+	\cp Makefile3521.param Makefile.param
+	echo "MMUCHIP=CHIP_HISI3521" >>./tmp.mak
+	echo "3521 environment built for R21xx"
+	echo -e ""
+	echo -e ""
+fi
+
+if [ "$char" == "8" ];then
+	echo "Build env for NR35xx"
+	\cp Makefile3535.param Makefile.param
+	echo "MMUCHIP=CHIP_HISI3521" >>./tmp.mak
+	echo "3535 environment built for NR35xx"
+	echo -e ""
+	echo -e ""
+fi
+
+if [ "$char" == "9" ];then
+	echo "Build env for R10xx"
+	\cp Makefile3520d.param Makefile.param
+	echo "MMUCHIP=CHIP_HISI3521" >>./tmp.mak
+	echo "3520d environment built for R10xx"
+	echo -e ""
+	echo -e ""
+fi
+
+echo "Release or Debug :"
+echo "1) Release"
+echo "2) Debug"
+#read -n 1 char2
+char2=1
+if [ "$char2" == "1" ];then
+	echo ""
+	echo "MYDEFINE=RELEASE_VERSION" >>./tmp.mak
+	echo "this is a release version!"
+	echo ""
+fi
+if [ "$char2" == "2" ];then
+	echo ""
+	echo "MYDEFINE=DEBUG_VERSION" >>./tmp.mak
+	echo "this is a debug version!"
+	echo ""
+fi
+
+if [ "$char" == "6" ];then
+	echo ""
+fi
+
+if [ "$char" == "7" ];then
+	echo ""
+fi
+
+if [ "$char" == "8" ];then
+	echo ""
+fi
+
+if [ "$char" == "9" ];then
+	echo ""
+fi

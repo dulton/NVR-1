@@ -1,0 +1,55 @@
+include  ../../../Makefile.param
+
+CCILINUX_eti_CC    := $(CCARCH)gcc
+CCILINUX_eti_CPP   := $(CCARCH)g++
+CCILINUX_eti_LD    := $(CCARCH)ld
+CCILINUX_eti_AR    := $(CCARCH)ar
+CCILINUX_eti_STRIP := $(CCARCH)strip
+
+INC_DIR := ../include
+SRC_DIR := ../src
+BUILD_DIR := ../build
+
+TARGET := libgraphics.a
+INSTALL_PATH := $(BUILD_DIR)
+
+INC_PATH += $(INC_DIR)
+
+INC_PATH += $(TL_APP_MPP_PATH)/include
+
+#CFLAGS += -fpack-struct
+
+CFLAGS += -O2 -Wall -fno-strict-aliasing
+
+CFLAGS += $(foreach dir,$(INC_PATH),-I$(dir))
+
+CFLAGS += $(TL_APP_INC_PATH) 
+
+include ../../../tmp.mak
+ifdef MMUCHIP
+	CFLAGS += -D$(MMUCHIP)
+endif
+
+OBJS :=	$(BUILD_DIR)/debug/Graphics				\
+
+OBJS := $(foreach obj,$(OBJS),$(obj).o)
+
+$(BUILD_DIR)/debug/%.o: $(SRC_DIR)/%.c
+	$(CCILINUX_eti_CC) $(CFLAGS) -c $< -o $@  
+	
+$(BUILD_DIR)/debug/%.o: $(SRC_DIR)/%.cpp
+	$(CCILINUX_eti_CPP) $(CFLAGS) -c $< -o $@
+	
+all:$(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CCILINUX_eti_AR) crus $(TARGET) $(OBJS)
+	#install -m 0755 $(TARGET) $(INSTALL_PATH)
+	\cp $(TARGET) ../../../Common/lib -rf
+clean:
+	rm -f $(OBJS) *.pdb *.map
+	rm -f $(TARGET)
+
+print: $(SRC_DIR)/*.c
+	lpr -p $?
+	touch print

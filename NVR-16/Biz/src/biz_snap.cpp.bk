@@ -1,0 +1,910 @@
+#include <time.h>
+#include "MultiTask/Timer.h"
+#include "biz.h"
+#include "biz_config.h"
+#include "biz_encode.h"
+#include "mod_alarm.h"
+#include "biz_snap.h"
+#include "ipcamera.h"
+
+
+#define g_SnapManager (*CSnapManager::instance())
+
+#define nSECPERMIN	(60)
+#define nSECPERHOUR	(60*60)
+const int indextosec[] = {1, 2, 3, 4, 5, 10*nSECPERMIN, 30*nSECPERMIN, nSECPERHOUR, 12*nSECPERHOUR, 24*nSECPERHOUR};
+
+typedef struct {
+	time_t StartTime;	//报警触发时间
+	time_t EndTime;	//报警解除时间
+} sTimeRange;
+
+typedef enum
+{
+	EM_ALARM_START = 0,	// 0 报警触发
+	EM_ALARM_ING,		// 1 报警中
+	EM_ALARM_END,		// 2	报警解除
+	EM_ALARM_STILL,	// 3	报警延迟，延录
+} EM_ALARM_STATUS;
+
+
+
+class CSnapManager : public CThread
+{
+	//非报警类型请求抓图
+	friend int RequestSnap(u8 chn, EM_SNAP_TYPE type);
+	//外部告知报警状态(触发和结束)，模块内部处理抓图
+	friend int AlarmStatusChange(u8 chn, EM_ALARM_TYPE type, int status);
+
+	friend int GetSnapProc(char *SnapData,	/*抓拍数据指针*/
+                                  unsigned int DataSize,	/*抓拍数据长度*/
+                                  int width,				/*抓拍返回的图像宽高*/
+                                  int height,			
+                                  int count,				/*抓拍的第几张*/
+                                  void* pUserData);			/*当前用作通道*/
+	
+public:
+	PATTERN_SINGLETON_DECLARE(CSnapManager);
+	
+	~CSnapManager();
+	VD_BOOL Start(u8 MaxSensorNum, u8 MaxIpcChn);
+	void ThreadProc();
+	//int RequestSnap(u8 chn, EM_SNAP_TYPE type);
+	int AlarmStatusChange(u8 chn, EM_SNAP_TYPE type, int status);
+	int Snapshot_Register(u8 chn);
+
+protected:
+	CSnapManager();
+private:
+	CTimer **pp_ChnRequestSnapTimer;	//每个通道一个
+	volatile u8 *p_ChnReqTypeMask;	//请求抓图标记，抓图类型
+	CMutex m_Mutex;
+	//time_t *p_ChnLastReqTime;		//最近一次请求时间
+	time_t *p_ChnTimeLast;//通道定时最后操作时间
+	time_t *p_ChnRecSensor;//录像配置-- 事件-- sersor最后操作时间
+	time_t *p_ChnRecIPCMD;//录像配置-- 事件-- IPCMD最后操作时间
+	time_t *p_ChnRecIPCEXT;//录像配置-- 事件-- IPCEXT最后操作时间
+	time_t *p_ChnSGSensor;//上传中心-- 报警-- sersor最后操作时间
+	time_t *p_ChnSGIPCMD;//上传中心-- 报警-- IPCMD最后操作时间
+	time_t *p_ChnSGIPCEXT;//上传中心-- 报警-- IPCEXT最后操作时间
+	
+	CMutex *p_ChnMutex;	//通道信息锁
+	//用于报警
+	u8 m_MaxSensorNum;	//本机传感器数目
+	u8 m_MaxIpcChn;		//通道数目
+	//CMutex *p_ChnSensorMutex;//保护本机报警触发、接触时间段
+	//CMutex *p_ChnIPCMDMutex;//保护移动侦测触发、接触时间段
+	//CMutex *p_ChnIPCEXTMutex;//保护IPC外部报警触发、接触时间段
+	volatile u32 m_ChnSensorMask;//每一位表示一个传感器
+	volatile u32 m_ChnIPCMDMask;
+	volatile u32 m_ChnIPCEXTMask;
+	sTimeRange *p_SensorRange;
+	sTimeRange *p_IPCMDRange;
+	sTimeRange *p_IPCEXTRange;
+
+	VD_BOOL  m_Started;	//初始化完成，服务开启
+
+	
+};
+
+
+
+/************************************************************/
+PATTERN_SINGLETON_IMPLEMENT(CSnapManager);
+
+CSnapManager::CSnapManager():CThread("SnapManager", TP_TIMER),  m_Mutex(MUTEX_RECURSIVE)
+{
+	
+	pp_ChnRequestSnapTimer = NULL;
+	p_ChnReqTypeMask = NULL;
+	//p_ChnLastReqTime = NULL;
+	p_ChnMutex = NULL;
+
+	m_MaxSensorNum = 0;
+	m_MaxIpcChn = 0;
+	m_Started = FALSE;
+		
+	//printf("CSnapManager::CSnapManager()>>>>>>>>>\n");
+}
+
+CSnapManager::~CSnapManager()
+{
+	DestroyThread();
+
+	if (p_ChnMutex)
+	{
+		delete []p_ChnMutex;
+		p_ChnMutex = NULL;
+	}
+
+	if (p_ChnLastReqTime)
+	{
+		delete []p_ChnLastReqTime;
+		p_ChnLastReqTime = NULL;
+	}
+	
+	if (p_ChnReqTypeMask)
+	{
+		delete []p_ChnReqTypeMask;
+		p_ChnReqTypeMask = NULL;
+	}
+	
+	if (pp_ChnRequestSnapTimer)
+	{
+		delete []pp_ChnRequestSnapTimer;
+		pp_ChnRequestSnapTimer = NULL;
+	}
+}
+
+int CSnapManager::Start(u8 MaxSensorNum, u8 MaxIpcChn)
+{
+	//printf("CSnapManager %s 1\n", __func__);
+	m_MaxSensorNum = MaxSensorNum;
+	m_MaxIpcChn = MaxIpcChn;
+	m_Started = FALSE;
+	
+	pp_ChnRequestSnapTimer = new  (std::nothrow) CTimer*[m_MaxIpcChn];
+	if (pp_ChnRequestSnapTimer == NULL)
+	{
+		printf("%s new pp_ChnRequestSnapTimer failed\n", __func__);
+		goto FAILED0;
+	}
+	memset(pp_ChnRequestSnapTimer, 0, sizeof(CTimer*) * m_MaxIpcChn);
+	
+	p_ChnReqTypeMask = new (std::nothrow) u8[m_MaxIpcChn];
+	if (p_ChnReqTypeMask == NULL)
+	{
+		printf("%s new p_ChnReqTypeMask failed\n", __func__);
+		goto FAILED1;
+	}
+	memset((void *)p_ChnReqTypeMask, 0, sizeof(u8)*m_MaxIpcChn);
+
+	//time_t *p_ChnTimeLast;//通道定时最后操作时间
+	p_ChnTimeLast = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnTimeLast == NULL)
+	{
+		printf("%s new p_ChnTimeLast failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnTimeLast, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_RecSensor;//录像配置-- 事件-- sersor最后操作时间
+	p_ChnRecSensor = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnRecSensor == NULL)
+	{
+		printf("%s new p_ChnRecSensor failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnRecSensor, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_ChnRecIPCMD;//录像配置-- 事件-- IPCMD最后操作时间
+	p_ChnRecIPCMD = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnRecIPCMD == NULL)
+	{
+		printf("%s new p_ChnRecIPCMD failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnRecIPCMD, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_ChnRecIPCEXT;//录像配置-- 事件-- IPCEXT最后操作时间
+	p_ChnRecIPCEXT = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnRecIPCEXT == NULL)
+	{
+		printf("%s new p_ChnRecIPCEXT failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnRecIPCEXT, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_SGSensor;//上传中心-- 报警-- sersor最后操作时间
+	p_ChnSGSensor = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnSGSensor == NULL)
+	{
+		printf("%s new p_ChnSGSensor failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnSGSensor, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_ChnSGIPCMD;//上传中心-- 报警-- IPCMD最后操作时间
+	p_ChnSGIPCMD = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnSGIPCMD == NULL)
+	{
+		printf("%s new p_ChnSGIPCMD failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnSGIPCMD, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+	//time_t *p_ChnSGIPCEXT;//上传中心-- 报警-- IPCEXT最后操作时间
+	p_ChnSGIPCEXT = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnSGIPCEXT == NULL)
+	{
+		printf("%s new p_ChnSGIPCEXT failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnSGIPCEXT, 0, sizeof(time_t)*m_MaxIpcChn);
+	
+#if 0
+	p_ChnLastReqTime = new (std::nothrow) time_t [m_MaxIpcChn];
+	if (p_ChnLastReqTime == NULL)
+	{
+		printf("%s new p_ChnLastReqTime failed\n", __func__);
+		goto FAILED2;
+	}
+	memset(p_ChnLastReqTime, 0, sizeof(time_t)*m_MaxIpcChn);
+#endif
+	p_ChnMutex= new (std::nothrow) CMutex [m_MaxIpcChn];
+	if (p_ChnMutex == NULL)
+	{
+		printf("%s new p_ChnMutex failed\n", __func__);
+		goto FAILED3;
+	}
+
+	p_ChnSensorMutex= new (std::nothrow) CMutex [m_MaxSensorNum];
+	if (p_ChnSensorMutex == NULL)
+	{
+		printf("%s new p_ChnSensorMutex failed\n", __func__);
+		goto FAILED4;
+	}
+
+	p_SensorRange = new (std::nothrow) sTimeRange [m_MaxSensorNum];
+	if (p_SensorRange == NULL)
+	{
+		printf("%s new p_SensorRange failed\n", __func__);
+		goto FAILED5;
+	}
+	memset(p_SensorRange, 0, sizeof(sTimeRange) * m_MaxSensorNum);
+
+	p_ChnIPCMDMutex= new (std::nothrow) CMutex [m_MaxIpcChn];
+	if (p_ChnIPCMDMutex == NULL)
+	{
+		printf("%s new p_ChnIPCMDMutex failed\n", __func__);
+		goto FAILED6;
+	}
+
+	p_IPCMDRange = new (std::nothrow) sTimeRange [m_MaxIpcChn];
+	if (p_IPCMDRange == NULL)
+	{
+		printf("%s new p_IPCMDRange failed\n", __func__);
+		goto FAILED7;
+	}
+	memset(p_IPCMDRange, 0, sizeof(sTimeRange) * m_MaxIpcChn);
+
+	p_ChnIPCEXTMutex= new (std::nothrow) CMutex [m_MaxIpcChn];
+	if (p_ChnIPCEXTMutex == NULL)
+	{
+		printf("%s new p_ChnIPCEXTMutex failed\n", __func__);
+		goto FAILED8;
+	}
+
+	p_IPCEXTRange = new (std::nothrow) sTimeRange [m_MaxIpcChn];
+	if (p_IPCEXTRange == NULL)
+	{
+		printf("%s new p_IPCEXTRange failed\n", __func__);
+		goto FAILED9;
+	}
+	memset(p_IPCEXTRange, 0, sizeof(sTimeRange) * m_MaxIpcChn);
+
+	//printf("CSnapManager %s 2\n", __func__);
+	CreateThread();
+	//printf("CSnapManager %s 3\n", __func__);
+	m_ChnSensorMask = 0;//每一位表示一个传感器
+	m_ChnIPCMDMask = 0;
+	m_ChnIPCEXTMask = 0;
+
+	
+	m_Started = TRUE;
+	
+	return 0;
+
+		
+FAILED9:
+	delete []p_ChnIPCEXTMutex;
+	p_ChnIPCEXTMutex= NULL;
+	
+FAILED8:
+
+	delete []p_IPCMDRange;
+	p_IPCMDRange= NULL;
+	
+FAILED7:
+	delete []p_ChnIPCMDMutex;
+	p_ChnIPCMDMutex= NULL;
+	
+FAILED6:
+	delete []p_SensorRange;
+	p_SensorRange= NULL;
+	
+FAILED5:
+	delete []p_ChnSensorMutex;
+	p_ChnSensorMutex = NULL;
+	
+FAILED4:
+	delete []p_ChnMutex;
+	p_ChnMutex = NULL;
+
+FAILED3:
+	delete []p_ChnLastReqTime;
+	p_ChnLastReqTime = NULL;
+	
+FAILED2:
+	delete []p_ChnReqTypeMask;
+	p_ChnReqTypeMask = NULL;
+	
+FAILED1:
+	delete []pp_ChnRequestSnapTimer;
+	pp_ChnRequestSnapTimer = NULL;
+	
+FAILED0:
+	return 1;
+
+}
+
+
+int GetSnapProc(char *SnapData,	/*抓拍数据指针*/
+                                  unsigned int DataSize,		/*抓拍数据长度*/
+                                  int width,					/*抓拍返回的图像宽高*/
+                                  int height,			
+                                  int count,				 /*抓拍的第几张*/
+                                  void* pUserData)		/*当前用作通道*/
+{
+	int ret = 0;
+	int chn = (int)pUserData;
+	struct timeval tv;
+	gettimeofday(&tv,NULL);
+	
+	//printf("%s be invoked\n", __FUNCTION__);
+	//printf("\t after %u.%u\n", tv.tv_sec, tv.tv_usec);
+	//printf("\t chn: %d\n", chn);
+	//printf("\t DataSize: %d\n", DataSize);
+	//printf("\t width: %d\n", width);
+	//printf("\t height: %d\n", height);
+	//printf("\t pUserData: %d\n", (int)pUserData);
+
+	
+	//printf("\n\n%s before invoke RecordSnapshotToBuf()\n", __FUNCTION__);
+	//ret = ModRecordSnapshotToBuf(chn, 1<<0, tv.tv_sec, tv.tv_usec, SnapData, DataSize, width, height);
+	//printf("%s after invoke RecordSnapshotToBuf(), ret: %d\n\n\n", __FUNCTION__, ret);
+	int record_flag = 0;
+	u32 tmp = g_SnapManager.p_ChnReqTypeMask[chn];
+
+	int secs = 0;
+	SBizSnapChnPara SnapChnParam;	//抓图参数
+	time_t CurTime = time(NULL);
+	struct tm pretm, curtm;
+	
+	gmtime_r(&tv.tv_sec, &curtm);
+	printf("%s chn%d, time: %d:%d:%d\n", __func__, chn, curtm.tm_hour, curtm.tm_min, curtm.tm_sec);
+		
+	if (tmp & (1<<TypeTime)) //定时
+	{
+		if (ConfigGetSnapChnPara(0, &SnapChnParam, chn) == 0)
+		{
+			secs = indextosec[SnapChnParam.TimeSnap.Interval];
+			if ((CurTime > g_SnapManager.p_ChnLastReqTime[chn]) \
+				&& (CurTime - g_SnapManager.p_ChnLastReqTime[chn] >= secs))
+			{
+				
+				gmtime_r(&g_SnapManager.p_ChnLastReqTime[chn], &pretm);
+
+				printf("%s chn%d, curtime: %d.%d--%02d:%02d:%02d, pretime: %02d:%02d:%02d\n", __func__, chn, \
+						tv.tv_sec, tv.tv_usec, \
+						curtm.tm_hour, curtm.tm_min, curtm.tm_sec, \
+						pretm.tm_hour, pretm.tm_min, pretm.tm_sec);
+				
+				g_SnapManager.p_ChnLastReqTime[chn] = CurTime;
+
+				record_flag = 1;
+			}
+			else
+			{
+				tmp &= ~(1<<TypeTime);
+			}
+		}
+		else
+		{
+			tmp &= ~(1<<TypeTime);
+		}
+	}
+
+	
+	
+	return 0;
+}
+
+void CSnapManager::ScanSensor()
+{
+	u32 i, j, tmp;
+	VD_BOOL flag;
+	SBizSGParam SGParam;	//深广平台参数
+	SBizAlarmPicCFG para;
+	SBizSnapChnPara SnapChnParam;	//抓图参数
+	time_t CurTime;
+	int Interval;
+	
+	CGuard guard(p_ChnSensorMutex[0]);
+	
+	tmp = m_ChnSensorMask;
+	for (i=0; i<m_MaxSensorNum; i++)
+	{
+		//是否在前置时间到延录时间段内
+		if ((tmp & (1<<i)) || (p_SensorRange[i].EndTime != 0))
+		{								
+			SBizAlarmPicCFG para;
+			if (ConfigGetSGAlarmPara(0, &para, i) == 0)
+			{
+				for (j=0; j<m_MaxIpcChn; j++)
+				{
+					if (para.IpcChn & (1<<j))//联动的IPC
+					{
+						//是否到达录像配置时间点
+						if (ConfigGetSnapChnPara(0, &SnapChnParam, j) == 0)
+						{
+							if (SnapChnParam.TimeSnap.Enable)
+							{
+								Interval = indextosec[SnapChnParam.TimeSnap.Interval];
+								//刚触发或是到达间隔点
+								if ((p_ChnRecSensor[j] == 0) \
+									||((CurTime > p_ChnRecSensor[j]) && (CurTime - p_ChnRecSensor[j]  >= Interval)))
+								{
+									flag = TRUE;
+									p_ChnRecSensor[j] = CurTime;
+								}
+							}
+						}
+						//上传
+						if (ConfigGetSGPara(0, &SGParam) != 0)
+						{
+							if (SGParam.RunEnable && SGParam.AlarmEnable)	//运行状态启用且报警联动启用
+							{
+								Interval = para.Interval;
+								//刚触发或是到达间隔点
+								if (p_ChnSGSensor[j] == 0)
+								{
+									flag = TRUE;
+									p_ChnSGSensor[j] = CurTime;
+									//上传预录部分抓图
+								}
+								
+								if ((CurTime > p_ChnSGSensor[j]) && (CurTime - p_ChnSGSensor[j]  >= Interval))
+								{
+									flag = TRUE;
+									p_ChnSGSensor[j] = CurTime;
+								}
+							}
+						}
+						p_ChnReqTypeMask[j] |= 1<<TypeAlarm;
+					}
+				}
+			}
+			else
+			{
+				printf("%s chn%d ConfigGetSGAlarmPara failed\n", __func__, i);
+			}
+		}
+	}
+}
+
+
+void CSnapManager::ThreadProc()
+{
+	u32 i, j, tmp;
+	VD_BOOL flag;
+	SBizSGParam SGParam;	//深广平台参数
+	SBizAlarmPicCFG para;
+	SBizDailyPicCFG para1;
+	SBizSnapChnPara SnapChnParam;	//抓图参数
+	time_t CurTime;
+	int Interval;
+	
+	
+	printf("CSnapManager::ThreadProc: m_MaxSensorNum: %d, m_MaxIpcChn: %d\n", m_MaxSensorNum, m_MaxIpcChn);
+	
+	while (1)
+	{
+		if (ConfigGetSGPara(0, &SGParam) != 0)
+		{
+			printf("%s ConfigGetSGPara failed\n", __func__);
+			sleep(1);
+			continue;
+		}
+		
+		m_Mutex.Enter();
+		
+		time(&CurTime);
+		flag = FALSE;
+		//1、报警对IPC抓图通道掩码的影响
+		//if (SGParam.RunEnable && SGParam.AlarmEnable)	//运行状态启用且报警联动启用
+		{
+			p_ChnSensorMutex[0].Enter();
+			tmp = m_ChnSensorMask;
+			for (i=0; i<m_MaxSensorNum; i++)
+			{
+				//是否在前置时间到延录时间段内
+				if ((tmp & (1<<i)) || (p_SensorRange[i].EndTime != 0))
+				{								
+					SBizAlarmPicCFG para;
+					if (ConfigGetSGAlarmPara(0, &para, i) == 0)
+					{
+						for (j=0; j<m_MaxIpcChn; j++)
+						{
+							if (para.IpcChn & (1<<j))//联动的IPC
+							{
+								//是否到达录像配置时间点
+								if (ConfigGetSnapChnPara(0, &SnapChnParam, j) == 0)
+								{
+									if (SnapChnParam.TimeSnap.Enable)
+									{
+										Interval = indextosec[SnapChnParam.TimeSnap.Interval];
+										//刚触发或是到达间隔点
+										if ((p_ChnRecSensor[j] == 0) \
+											||((CurTime > p_ChnRecSensor[j]) && (CurTime - p_ChnRecSensor[j]  >= Interval)))
+										{
+											flag = TRUE;
+											p_ChnRecSensor[j] = CurTime;
+										}
+									}
+								}
+								//上传
+
+								
+								p_ChnReqTypeMask[j] |= 1<<TypeAlarm;
+							}
+						}
+					}
+					else
+					{
+						printf("%s chn%d ConfigGetSGAlarmPara failed\n", __func__, i);
+					}
+				}
+			}
+			p_ChnSensorMutex[0].Leave();
+
+			p_ChnIPCMDMutex[0].Enter();
+			tmp = m_ChnIPCMDMask;
+			for (i=0; i<m_MaxIpcChn; i++) 
+			{
+				if ((tmp & (1<<i)) || (p_IPCMDRange[i].EndTime != 0))
+				{
+					SBizAlarmPicCFG para;
+					if (ConfigGetSGAlarmPara(0, &para, i+m_MaxSensorNum) == 0)
+					{
+						for (j=0; j<m_MaxIpcChn; j++)
+						{
+							if (para.IpcChn & (1<<j))//联动
+							{
+								p_ChnReqTypeMask[j] |= 1<<TypeMotionDet;
+							}
+						}
+					}
+					else
+					{
+						printf("%s chn%d ConfigGetSGAlarmPara failed\n", __func__, i);
+					}
+				}
+			}
+			p_ChnIPCMDMutex[0].Leave();
+
+			p_ChnIPCEXTMutex[0].Enter();
+			tmp = m_ChnIPCEXTMask;
+			for (i=0; i<m_MaxIpcChn; i++) 
+			{
+				if ((tmp & (1<<i)) || (p_IPCEXTRange[i].EndTime != 0))
+				{
+					SBizAlarmPicCFG para;
+					if (ConfigGetSGAlarmPara(0, &para, i+m_MaxSensorNum) == 0)
+					{
+						for (j=0; j<m_MaxIpcChn; j++)
+						{
+							if (para.IpcChn & (1<<j))//联动
+							{
+								p_ChnReqTypeMask[j] |= 1<<TypeAlarm;
+							}
+						}
+					}
+					else
+					{
+						printf("%s chn%d ConfigGetSGAlarmPara failed\n", __func__, i);
+					}
+				}
+			}
+			p_ChnIPCEXTMutex[0].Leave();
+		}
+		//报警对IPC抓图通道掩码的影响end
+
+		//2、日常图像是否启用(每天两个时间点上传深广)
+		SBizDateTime DateTime;
+		BizSysComplexDTGet_TZ(&DateTime);
+		static int flagtime1 = 0;
+		static int flagtime2 = 0;
+		if (SGParam.RunEnable && SGParam.DailyPicEnable)	//运行状态启用且日常图像启用
+		{
+			if (ConfigGetSGDailyPara(0, &para1) == 0)
+			{
+				if (para1.Time1.TimeEnable 
+					&& para1.Time1.hour == DateTime.nHour
+					&& para1.Time1.min == DateTime.nMinute)
+				{
+					if ((DateTime.nSecond >= para1.Time1.sec) && (DateTime.nSecond < para1.Time1.sec+10))
+					{
+						if (flagtime1 == 0)
+						{
+							for (j=0; j<m_MaxIpcChn; j++)
+							{
+								if (para1.IpcChn1 & (1<<j))//联动
+								{
+									p_ChnReqTypeMask[j] |= 1<<TypeDaily;
+								}
+							}
+							flagtime1 = 1;
+						}
+					}
+					else
+					{
+						flagtime1 = 0;
+					}
+				}
+
+				if (para1.Time2.TimeEnable 
+					&& para1.Time2.hour == DateTime.nHour
+					&& para1.Time2.min == DateTime.nMinute)
+				{
+					if ((DateTime.nSecond >= para1.Time2.sec) && (DateTime.nSecond < para1.Time2.sec+10))
+					{
+						if (flagtime2 == 0)
+						{
+							for (j=0; j<m_MaxIpcChn; j++)
+							{
+								if (para1.IpcChn2 & (1<<j))//联动
+								{
+									p_ChnReqTypeMask[j] |= 1<<TypeDaily;
+								}
+							}
+							flagtime2 = 1;
+						}
+					}
+					else
+					{
+						flagtime2 = 0;
+					}
+				}
+			}
+		}
+		
+		for (i=0; i<m_MaxIpcChn; i++) 
+		{
+			flag = FALSE;
+			
+			//判断是否要去抓图
+			
+			//1、报警联动是否启用
+			//		监管平台--> 基本设置
+			//2、日常图像是否启用(每天两个时间点上传深广)
+			//		监管平台--> 基本设置
+			//4、其他模块是否过请求抓图
+			//		界面手动截图
+			if (p_ChnReqTypeMask[i])
+			{
+				flag = TRUE;
+			}
+			//3、定时抓图是否启用
+			//		录像配置--> 抓图参数
+			if (flag == FALSE)
+			{
+				if (ConfigGetSnapChnPara(0, &SnapChnParam, i) == 0)
+				{
+					if (SnapChnParam.TimeSnap.Enable)
+					{
+						
+						p_ChnReqTypeMask[i] |= 1<<TypeTime; 
+						flag = TRUE;
+					}
+				}
+			}
+			
+			if (flag && IPC_GetLinkStatus(i))
+			{
+				if (NULL == pp_ChnRequestSnapTimer[i])
+				{
+					pp_ChnRequestSnapTimer[i] = new (std::nothrow) CTimer("Snap");
+				}
+				if (pp_ChnRequestSnapTimer[i]->IsStarted() == FALSE)
+				{
+					pp_ChnRequestSnapTimer[i]->Start(this, (VD_TIMERPROC)&CSnapManager::Snapshot_Register, 0, 0, i);
+				}
+			}
+		}
+		m_Mutex.Leave();
+		
+		usleep(1000*1000);// 1S扫一次
+	}
+	
+}
+int CSnapManager::Snapshot_Register(u8 chn)
+{
+	//不同的类型申请不同的分辨率的图片
+	return IPC_Snapshot_RegisterCB(chn, 1, GetSnapProc);
+}
+
+
+
+/*************  Export API  *********************/
+
+//服务初始化，启动
+int SnapServerStart(u8 MaxSensorNum, u8 MaxIpcChn)
+{
+	return g_SnapManager.Start(MaxSensorNum, MaxIpcChn);
+}
+
+//非报警类型请求抓图
+int RequestSnap(u8 chn, EM_SNAP_TYPE type)
+{
+	CGuard guard(g_SnapManager.m_Mutex);
+	
+	if (!g_SnapManager.m_Started)
+	{
+		return 1;
+	}
+	
+	if (chn >= g_SnapManager.m_MaxIpcChn)
+	{
+		printf("%s chn%d invalid\n", __func__, chn);
+		return 1;
+	}
+
+	if (type >= TypeSnapMax)
+	{
+		printf("%s chn%d type: %d invalid\n", __func__, chn, type);
+		return 1;
+	}
+
+	g_SnapManager.p_ChnReqTypeMask[chn] |= 1<<type;
+	
+	return 0;	
+}
+
+//外部告知报警状态(触发和结束)，模块内部处理抓图
+//type : 移动侦测、本机报警、IPC外部报警
+//每种类型都要有掩码标示，主逻辑来处理向哪个IPC通道取图
+int AlarmStatusChange(u8 chn, EM_ALARM_TYPE type, int status)
+{	
+	CGuard guard(g_SnapManager.m_Mutex);
+	
+	if (!g_SnapManager.m_Started)
+	{
+		return 1;
+	}
+	
+	switch (type)
+	{
+		case TypeSensor:
+		{
+			if (chn > g_SnapManager.m_MaxSensorNum)
+			{
+				printf("%s Sensor chn: %d invalid\n", __func__, chn);
+				return 1;
+			}
+			
+			SBizAlarmPicCFG para;
+			ConfigGetSGAlarmPara(0, &para, chn);
+			
+			//g_SnapManager.p_ChnSensorMutex[chn].Enter();
+			//g_SnapManager.p_ChnSensorMutex[0].Enter();
+			if (status)	//触发
+			{
+				if ((g_SnapManager.m_ChnSensorMask & (1<<chn)) == 0)//当前没有触发
+				{
+					//并且延录完成
+					if (g_SnapManager.p_SensorRange[chn].EndTime == 0)
+					{
+						g_SnapManager.m_ChnSensorMask |= 1<<chn;
+						//time(&tm);
+						g_SnapManager.p_SensorRange[chn].StartTime = time(NULL);//延录完成清零
+						g_SnapManager.p_RecSensor[chn] = 0;//两个记录时间是因为录像和上传时间间隔不同
+						g_SnapManager.p_SGSensor[chn] = 0;
+					}
+				}
+			}
+			else	//解除
+			{
+				if (g_SnapManager.m_ChnSensorMask & (1<<chn))
+				{
+					g_SnapManager.m_ChnSensorMask &= ~(1<<chn);
+					g_SnapManager.p_SensorRange[chn].EndTime = time(NULL)+para.StillTimes;//延录完成清零
+				}
+			}
+			//g_SnapManager.p_ChnSensorMutex[chn].Leave();
+			//g_SnapManager.p_ChnSensorMutex[0].Leave();
+		} break;
+		case TypeMD:
+		{
+			if (chn > g_SnapManager.m_MaxIpcChn)
+			{
+				printf("%s Sensor chn: %d invalid\n", __func__, chn);
+				return 1;
+			}
+
+			SBizAlarmPicCFG para;
+			ConfigGetSGAlarmPara(0, &para, chn+g_SnapManager.m_MaxSensorNum);
+			
+			//g_SnapManager.p_ChnIPCMDMutex[chn].Enter();
+			//g_SnapManager.p_ChnIPCMDMutex[0].Enter();
+			if (status)	//触发
+			{
+				if ((g_SnapManager.m_ChnIPCMDMask & (1<<chn)) == 0)//当前没有触发
+				{
+					//并且延录完成
+					if (g_SnapManager.p_IPCMDRange[chn].EndTime == 0)
+					{
+						g_SnapManager.m_ChnIPCMDMask |= 1<<chn;
+						g_SnapManager.p_IPCMDRange[chn].StartTime = time(NULL);//延录完成清零
+						g_SnapManager.p_ChnRecIPCMD[chn] = 0;//两个记录时间是因为录像和上传时间间隔不同
+						g_SnapManager.p_ChnSGIPCMD[chn] = 0;
+					}
+				}
+			}
+			else	//解除
+			{
+				if (g_SnapManager.m_ChnIPCMDMask & (1<<chn))
+				{
+					g_SnapManager.m_ChnIPCMDMask &= ~(1<<chn);
+					g_SnapManager.p_IPCMDRange[chn].EndTime = time(NULL)+para.StillTimes;//延录完成清零
+				}
+			}
+			//g_SnapManager.p_ChnIPCMDMutex[chn].Leave();
+			//g_SnapManager.p_ChnIPCMDMutex[0].Leave();
+			
+		} break;
+		case TypeIPCEXT:
+		{
+			if (chn > g_SnapManager.m_MaxIpcChn)
+			{
+				printf("%s Sensor chn: %d invalid\n", __func__, chn);
+				return 1;
+			}
+
+			SBizAlarmPicCFG para;
+			ConfigGetSGAlarmPara(0, &para, chn+g_SnapManager.m_MaxSensorNum);
+			
+			//g_SnapManager.p_ChnIPCEXTMutex[chn].Enter();
+			//g_SnapManager.p_ChnIPCEXTMutex[0].Enter();
+			if (status)	//触发
+			{
+				if ((g_SnapManager.m_ChnIPCEXTMask & (1<<chn)) == 0)//当前没有触发
+				{
+					//并且延录完成
+					if (g_SnapManager.p_IPCEXTRange[chn].EndTime == 0)
+					{
+						g_SnapManager.m_ChnIPCEXTMask |= 1<<chn;
+						g_SnapManager.p_IPCEXTRange[chn].StartTime = time(NULL);//延录完成清零
+						g_SnapManager.p_ChnRecIPCEXT[chn] = 0;//两个记录时间是因为录像和上传时间间隔不同
+						g_SnapManager.p_ChnSGIPCEXT[chn] = 0;
+					}
+				}
+			}
+			else	//解除
+			{
+				if (g_SnapManager.m_ChnIPCEXTMask & (1<<chn))
+				{
+					g_SnapManager.m_ChnIPCEXTMask &= ~(1<<chn);
+					g_SnapManager.p_IPCEXTRange[chn].EndTime = time(NULL)+para.StillTimes;//延录完成清零
+				}
+			}
+			//g_SnapManager.p_ChnIPCEXTMutex[chn].Leave();
+			//g_SnapManager.p_ChnIPCEXTMutex[0].Leave();
+		} break;
+		default:
+		{
+			printf("%s type: %d invalid\n", __func__, type);
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
+
+
+
+
+
+
+

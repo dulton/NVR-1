@@ -1,0 +1,25 @@
+<html>
+<body>
+<SCRIPT language=javascript>
+function CurentTime(){  
+    var now = new Date();  
+    var hh = now.getHours();  
+    var mm = now.getMinutes();  
+    var ss = now.getTime() % 60000;  
+    ss = (ss - (ss % 1000)) / 1000;  
+    var clock = hh+':';  
+    if (mm < 10) clock += '0';  
+    clock += mm+':';  
+    if (ss < 10) clock += '0';  
+    clock += ss;  
+    return(clock);  
+}  
+ 
+function refreshCalendarClock(){  
+document.all.calendarClock.innerHTML = CurentTime();  
+}  
+document.write('<font id="calendarClock" style="color:#000000;font-family:Arial;font-size:50pt"><b> </b></font>'); 
+setInterval('refreshCalendarClock()',1000);   
+</SCRIPT>
+</body>
+</html>

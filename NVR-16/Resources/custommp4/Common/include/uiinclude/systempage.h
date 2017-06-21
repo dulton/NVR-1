@@ -1,0 +1,101 @@
+#ifndef _SYSTEMPAGE_H_
+#define _SYSTEMPAGE_H_
+
+#include "ui.h"
+
+#define PIC_SYSTEM_TOOL			"data/pics/system/tool.png"
+#define PIC_SYSTEM_LOG			"data/pics/system/log.png"
+#define PIC_SYSTEM_USER			"data/pics/system/user.png"
+#define PIC_SYSTEM_NETWORK		"data/pics/system/network.png"
+#define PIC_SYSTEM_IMAGE		"data/pics/system/image.png"
+#define PIC_SYSTEM_RECORD		"data/pics/system/record.png"
+#define PIC_SYSTEM_YUNTAI		"data/pics/system/yuntai.png"
+#define PIC_SYSTEM_ALARM		"data/pics/system/alarm.png"
+#define PIC_SYSTEM_EXCEPTION	"data/pics/system/exception.png"
+
+#ifdef MEIDIANBEIER_UI
+#define PIC_MAINMENU_BG			"data/pics/bg.png"
+#define PIC_MAINMENU_BG_CH			"data/pics/bg_ch.png"
+#define PIC_MAINMENU_BG_EN			"data/pics/bg_en.png"
+#define PIC_MAINMENU_BG1			"data/pics/bg1.png"
+#define PIC_MAINMENU_MENU			"data/pics/menu.png"
+
+#define PIC_MAINMENU_PLAY1			"data/pics/play1.png"
+#define PIC_MAINMENU_PARA1			"data/pics/para1.png"
+#define PIC_MAINMENU_AD1			"data/pics/ad1.png"
+#define PIC_MAINMENU_BAK1			"data/pics/bak1.png"
+#define PIC_MAINMENU_SYSINFO1			"data/pics/sysinfo1.png"
+#define PIC_MAINMENU_SHUTDOWN1			"data/pics/shutdown1.png"
+
+#define PIC_MAINMENU_PLAY2			"data/pics/play2.png"
+#define PIC_MAINMENU_PARA2			"data/pics/para2.png"
+#define PIC_MAINMENU_AD2			"data/pics/ad2.png"
+#define PIC_MAINMENU_BAK2			"data/pics/bak2.png"
+#define PIC_MAINMENU_SYSINFO2			"data/pics/sysinfo2.png"
+#define PIC_MAINMENU_SHUTDOWN2			"data/pics/shutdown2.png"
+#endif
+#define PIC_MAINMENU_TOOL			"data/pics/system/tool.png"
+#define PIC_MAINMENU_SYSTEM		"data/pics/system/system.png"
+#define PIC_MAINMENU_PTZCTRL		"data/pics/system/ptzctrl.png"
+#define PIC_MAINMENU_LOGSEARCH	"data/pics/system/log_search.png"
+#define PIC_MAINMENU_SHUTDOWN	"data/pics/system/shutdown.png"
+
+
+//#ifdef HANKE
+#define PIC_MAINMENU_MANUALREC	"data/pics/system/manualrec.png"
+#define PIC_MAINMENU_PLAYBACK	"data/pics/system/play.png"
+#define PIC_MAINMENU_NETWORK	"data/pics/system/network.png"
+#define PIC_MAINMENU_RECORDSET	"data/pics/system/recordset.png"
+//#endif
+
+
+#define IDC_STATIC_SYSTEM_TOOL			IDD_DIALOG_SYSTEM+1
+#define IDC_STATIC_SYSTEM_LOG			IDD_DIALOG_SYSTEM+2
+#define IDC_STATIC_SYSTEM_USER			IDD_DIALOG_SYSTEM+3
+#define IDC_STATIC_SYSTEM_NETWORK		IDD_DIALOG_SYSTEM+4
+#define IDC_STATIC_SYSTEM_IMAGE			IDD_DIALOG_SYSTEM+5
+#define IDC_STATIC_SYSTEM_RECORD		IDD_DIALOG_SYSTEM+6
+#define IDC_STATIC_SYSTEM_YUNTAI		IDD_DIALOG_SYSTEM+7
+//#define IDC_STATIC_SYSTEM_ALARM			IDD_DIALOG_SYSTEM+8
+#define IDC_STATIC_SYSTEM_EXCEPTION		IDD_DIALOG_SYSTEM+9
+#define IDC_PICTURE_SYSTEM_TOOL			IDD_DIALOG_SYSTEM+10
+#define IDC_PICTURE_SYSTEM_LOG			IDD_DIALOG_SYSTEM+11
+#define IDC_PICTURE_SYSTEM_USER			IDD_DIALOG_SYSTEM+12
+#define IDC_PICTURE_SYSTEM_NETWORK		IDD_DIALOG_SYSTEM+13
+#define IDC_PICTURE_SYSTEM_IMAGE		IDD_DIALOG_SYSTEM+14
+#define IDC_PICTURE_SYSTEM_RECORD		IDD_DIALOG_SYSTEM+15
+#define IDC_PICTURE_SYSTEM_YUNTAI		IDD_DIALOG_SYSTEM+16
+#define IDC_PICTURE_SYSTEM_ALARM		IDD_DIALOG_SYSTEM+17
+#define IDC_PICTURE_SYSTEM_EXCEPTION	IDD_DIALOG_SYSTEM+18
+
+
+#define IDC_PICTURE_MAINMENU_TOOL	IDD_DIALOG_MAINMENU+1
+#define IDC_PICTURE_MAINMENU_SYSTEM	IDD_DIALOG_MAINMENU+2
+#define IDC_PICTURE_MAINMENU_PTZCTRL	IDD_DIALOG_MAINMENU+3
+#define IDC_PICTURE_MAINMENU_LOGSEARCH	IDD_DIALOG_MAINMENU+4
+#define IDC_PICTURE_MAINMENU_SHUTDOWN	IDD_DIALOG_MAINMENU+5
+#define IDC_PICTURE_MAINMENU_LINE	IDD_DIALOG_MAINMENU+6
+#define IDC_PICTURE_MAINMENU_INFO	IDD_DIALOG_MAINMENU+7
+#define IDC_PICTURE_MAINMENU_TIPS	IDD_DIALOG_MAINMENU+8
+//#ifdef HANKE
+#define IDC_PICTURE_MAINMENU_MANUALREC	IDD_DIALOG_MAINMENU+9
+#define IDC_PICTURE_MAINMENU_PLAYBACK	IDD_DIALOG_MAINMENU+10
+#define IDC_PICTURE_MAINMENU_NETWORK	IDD_DIALOG_MAINMENU+11
+#define IDC_PICTURE_MAINMENU_RECORDSET	IDD_DIALOG_MAINMENU+12
+//#endif
+#ifdef MEIDIANBEIER_UI
+#define IDC_PICTURE_MAINMENU_BG 	IDD_DIALOG_MAINMENU+17
+#define IDC_PICTURE_MAINMENU_BG1 	IDD_DIALOG_MAINMENU+18
+#define IDC_PICTURE_MAINMENU_BG2 	IDD_DIALOG_MAINMENU+19
+//#define IDC_PICTURE_MAINMENU_MENUPIC_BASE	 IDD_DIALOG_MAINMENU+20
+#define IDC_PICTURE_MAINMENU_TOOL1	IDD_DIALOG_MAINMENU+30
+#define IDC_PICTURE_MAINMENU_TOOL2	IDD_DIALOG_MAINMENU+40
+#define IDC_STATIC_MAINMENU_TOOL1	IDD_DIALOG_MAINMENU+50
+#define IDC_STATIC_MAINMENU_TOOL2	IDD_DIALOG_MAINMENU+60
+#endif
+
+
+BOOL CreateMenuPage();
+BOOL ShowMenuPage();
+
+#endif

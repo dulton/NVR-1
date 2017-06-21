@@ -1,0 +1,49 @@
+#CCARCH := arm-hisiv100-linux-
+CCARCH := arm-hisiv100nptl-linux-
+
+CFLAGS += -march=armv7-a -mcpu=cortex-a9
+CXXFlAGS +=-march=armv7-a -mcpu=cortex-a9
+CPPFLAGS +=-march=armv7-a -mcpu=cortex-a9
+
+CFLAGS += -DHI3521
+CXXFlAGS += -DHI3521
+CPPFLAGS += -DHI3521
+
+TL_APP_SDK_DIR:=/home/Hi3521/Hi3521_SDK_V1.0.2.0
+TL_APP_PUB_PATH:=$(TL_APP_SDK_DIR)/pub
+TL_APP_DRV_PATH:=$(TL_APP_SDK_DIR)/extdrv/
+TL_APP_MPP_PATH:=$(TL_APP_SDK_DIR)/mpp
+TL_APP_LIB_PATH:=$(TL_APP_MPP_PATH)/lib_hi3521
+TL_APP_COMPONENT_PATH:=$(TL_APP_MPP_PATH)/lib
+	
+TL_APP_LIBS := $(TL_APP_LIB_PATH)/libmpi.a \
+	$(TL_APP_LIB_PATH)/libhdmi.a \
+	$(TL_APP_LIB_PATH)/libaec.a \
+	$(TL_APP_LIB_PATH)/libpciv.a \
+	$(TL_APP_LIB_PATH)/libtde.a \
+	$(TL_APP_LIB_PATH)/libVoiceEngine.a \
+	$(TL_APP_LIB_PATH)/libanr.a \
+ 	$(TL_APP_LIB_PATH)/libjpeg.a \
+	$(TL_APP_LIB_PATH)/libresampler.a 
+	
+TL_APP_INC_PATH:=-I$(TL_APP_PUB_PATH)/include \
+	-I$(TL_APP_PUB_PATH)/kbuild-FULL_REL/include \
+	-I$(TL_APP_MPP_PATH)/include_hi3521 \
+	-I$(TL_APP_MPP_PATH)/sample/common\
+	-I$(TL_APP_MPP_PATH)/sample \
+	-I$(TL_APP_DRV_PATH)
+
+HISIARCH=HI3521
+
+DBG?=N
+ifeq ($(DBG),Y)
+export HI_MAKE_DBG:=HI_DEBUG
+export HI_SUPPORT_GDB:=YES
+else
+export HI_MAKE_DBG:=HI_RELEASE
+endif
+
+#only kernle need this
+#OSDRV:= 
+#DRV_PATH:=$(SDK_DIR)/$(OSDRV)/source/drv
+#LINUXROOT:=$(PUB_PATH)/kbuild-FULL_REL

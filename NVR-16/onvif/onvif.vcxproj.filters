@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ls_socket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_http.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_charbuf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_receiver_ptz.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_discovery.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_receiver_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_receiver_media.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_receiver_mngmt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_base64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ls_sha.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ls_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_socket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_http.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_charbuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_receiver_ptz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_discovery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_receiver_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_receiver_media.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_receiver_mngmt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_sha_private.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_sha.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_base64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ls_ptz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

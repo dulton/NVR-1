@@ -1,0 +1,43 @@
+CROSS_COMPILE := powerpc-linux-
+
+CCILINUX_eti_CC    := $(CROSS_COMPILE)gcc
+CCILINUX_eti_CPP   := $(CROSS_COMPILE)g++
+CCILINUX_eti_LD    := $(CROSS_COMPILE)ld
+CCILINUX_eti_AR    := $(CROSS_COMPILE)ar
+CCILINUX_eti_STRIP := $(CROSS_COMPILE)strip
+
+INC_DIR := ../include
+SRC_DIR := ../source
+
+APP_TARGET := cpclient
+INSTALL_APP_PATH := /mnt/nfs
+
+CFLAGS += -Wall -fno-strict-aliasing
+LDFLAGS += -lpthread -lapi
+
+INC_PATH += $(INC_DIR) ../../common/include
+LIB_PATH += ../../common/lib/debug
+
+CFLAGS  += $(foreach dir,$(INC_PATH),-I$(dir))
+LDFLAGS += $(foreach lib,$(LIB_PATH),-L$(lib))
+
+OBJS :=$(SRC_DIR)/debug/ctrlprotocol			\
+		$(SRC_DIR)/debug/vsip					\
+		$(SRC_DIR)/debug/testserver				\
+
+OBJS := $(foreach obj,$(OBJS),$(obj).o)
+
+$(SRC_DIR)/debug/%.o: $(SRC_DIR)/%.c
+	$(CCILINUX_eti_CC) $(CFLAGS) -c $< -o $@  
+$(SRC_DIR)/debug/%.o: $(SRC_DIR)/%.cpp
+	$(CCILINUX_eti_CPP) $(CFLAGS) -c $< -o $@
+	
+all:$(APP_TARGET)
+$(APP_TARGET): $(OBJS)
+	$(CCILINUX_eti_CC) -o $(APP_TARGET) $(OBJS) $(LDFLAGS)
+	$(CCILINUX_eti_STRIP) $(APP_TARGET)
+	install -m 0755 $(APP_TARGET) $(INSTALL_APP_PATH)
+
+clean:
+	rm -f $(OBJS) *.pdb *.map
+	rm -f $(TARGET)

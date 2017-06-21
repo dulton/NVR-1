@@ -1,0 +1,13 @@
+制作cramfs文件系统的方法：
+cramfs:
+	mkfs.cramfs ./rootfs_release_master_cramfs ./rootfs_master.r9624t.cramfs
+
+mkfs.cramfs命令linux系统中有。
+
+版本制作：
+
+ ./upgrade_pack -h 0x1000000 -m 0x8000000 -b 0 0x60000 u-boot.bin.r9624t.cramfs -k 0xc0000 0x4a0000 uImage_hs3520.r9624t.cramfs -frcramfs 0x560000 0x9a0000 rootfs_master.r9624t.cramfs -t 0xf00000 0x100000 container.bin -e 0x60000 0x20000 logo_start.jpg -u R9624T_V217
+
+
+设备端可以直接跑的升级程序（默认用mainboard2nd.bin升级）
+upgrade_flash

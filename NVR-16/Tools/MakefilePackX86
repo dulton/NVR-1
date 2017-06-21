@@ -1,0 +1,59 @@
+#CCARCH := arm-hismall-linux-
+
+CCILINUX_eti_CC    := $(CCARCH)gcc
+CCILINUX_eti_CPP   := $(CCARCH)g++
+CCILINUX_eti_LD    := $(CCARCH)ld
+CCILINUX_eti_AR    := $(CCARCH)ar
+CCILINUX_eti_STRIP := $(CCARCH)strip
+
+INC_DIR := ./inc ../common/inc ../common/inc/tlsdk
+SRC_DIR := ./src
+BUILD_DIR := ./
+OBJ_DIR := ./obj
+TEST_DIR := ./test
+
+TARGET := libtoolsX86.a
+INSTALL_PATH := $(BUILD_DIR)
+
+INC_PATH += $(INC_DIR)
+
+LDFLAGS := -ltoolsX86
+
+CFLAGS += -O2 -Wall -fno-strict-aliasing -DPACK -DX86
+
+CFLAGS += $(foreach dir,$(INC_PATH),-I$(dir))
+
+OBJS :=	$(BUILD_DIR)/obj/CustomGenerate				\
+				$(BUILD_DIR)/obj/Upgrade				\
+				$(BUILD_DIR)/obj/crc32				\
+
+OBJS := $(foreach obj,$(OBJS),$(obj)X86.o)
+
+$(BUILD_DIR)/obj/%X86.o: $(SRC_DIR)/%.c
+	$(CCILINUX_eti_CC) $(CFLAGS) -c $< -o $@  
+	
+$(BUILD_DIR)/obj/%.o: $(SRC_DIR)/%.cpp
+	$(CCILINUX_eti_CPP) $(CFLAGS) -c $< -o $@
+	
+all:$(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CCILINUX_eti_AR) crus $(TARGET) $(OBJS)
+	
+$(TEST_DIR)/testPackX86.o: $(TEST_DIR)/test.c
+	$(CCILINUX_eti_CC) $(CFLAGS) -c $< -o $@
+
+test:$(TEST_DIR)/testPackX86.o
+	$(CCILINUX_eti_CC) $(CFLAGS) $< -o $(TEST_DIR)/testPackX86 -L. $(LDFLAGS)
+
+clean:
+	rm -f $(OBJS) *.pdb *.map
+	rm -f $(TARGET)
+	rm -rf $(TEST_DIR)/testPackX86.o
+	rm -rf $(TEST_DIR)/testPackX86
+
+print: $(SRC_DIR)/*.c
+	lpr -p $?
+	touch print
+
+

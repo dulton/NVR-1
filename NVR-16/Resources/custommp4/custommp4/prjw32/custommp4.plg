@@ -1,0 +1,469 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: custommp4 - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\chen\LOCALS~1\Temp\RSP1AA.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../include" /I "../../common/include" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/custommp4.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"F:\code\app\custommp4\source\custommp4.c"
+"F:\code\app\custommp4\source\diskmanage.c"
+"F:\code\app\custommp4\source\partitionindex.c"
+"F:\code\app\custommp4\source\util.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\chen\LOCALS~1\Temp\RSP1AA.tmp" 
+Creating command line "link.exe -lib /nologo /out:"Debug\custommp4.lib"  .\Debug\custommp4.obj .\Debug\diskmanage.obj .\Debug\partitionindex.obj .\Debug\util.obj "
+<h3>Output Window</h3>
+Compiling...
+custommp4.c
+f:\code\app\common\include\custommp4.h(46) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(46) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(46) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(46) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(46) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(50) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(58) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(62) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(73) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(74) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(78) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(86) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(87) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(91) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(93) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(94) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(98) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(105) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(106) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(117) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(117) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(117) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(117) : error C2061: syntax error : identifier 'mdat_segment_info_table_t'
+f:\code\app\common\include\custommp4.h(117) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(128) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(128) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(128) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(128) : error C2061: syntax error : identifier 'video_frame_info_table_t'
+f:\code\app\common\include\custommp4.h(128) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(137) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(137) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(137) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(137) : error C2061: syntax error : identifier 'audio_frame_info_table_t'
+f:\code\app\common\include\custommp4.h(137) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(151) : error C2061: syntax error : identifier 'file_properties_object_t'
+f:\code\app\common\include\custommp4.h(152) : error C2061: syntax error : identifier 'vspot'
+f:\code\app\common\include\custommp4.h(152) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(153) : error C2061: syntax error : identifier 'aspot'
+f:\code\app\common\include\custommp4.h(153) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(154) : error C2061: syntax error : identifier 'mvot'
+f:\code\app\common\include\custommp4.h(154) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(156) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(158) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(159) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(182) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(187) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(190) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(190) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(190) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(190) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\custommp4.h(190) : error C2146: syntax error : missing ';' before identifier 'time_scale'
+f:\code\app\common\include\custommp4.h(190) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(190) : error C2059: syntax error : 'type'
+f:\code\app\common\include\custommp4.h(190) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(191) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(191) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(191) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(191) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\custommp4.h(191) : error C2146: syntax error : missing ';' before identifier 'time_scale'
+f:\code\app\common\include\custommp4.h(191) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(191) : error C2059: syntax error : 'type'
+f:\code\app\common\include\custommp4.h(191) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(193) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(193) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(193) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(194) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(194) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(194) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(196) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(196) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(196) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(198) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(198) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(198) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(199) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(199) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(199) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(201) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(201) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(201) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(202) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(202) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(202) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(203) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(203) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(203) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(204) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(204) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(204) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(205) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(205) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(205) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(206) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(206) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(206) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(207) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(207) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(207) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(209) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(209) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(209) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(210) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(210) : fatal error C1003: error count exceeds 100; stopping compilation
+diskmanage.c
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(43) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(43) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(43) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(43) : error C2061: syntax error : identifier 'chn_last_use_file'
+f:\code\app\common\include\partitionindex.h(43) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(55) : error C2061: syntax error : identifier 'chn_last_use_file'
+f:\code\app\common\include\partitionindex.h(58) : error C2059: syntax error : '}'
+f:\code\app\common\include\partitionindex.h(68) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(68) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(68) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(68) : error C2061: syntax error : identifier 'file_use_info'
+f:\code\app\common\include\partitionindex.h(68) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(82) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(82) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(82) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(82) : error C2061: syntax error : identifier 'segment_use_info'
+f:\code\app\common\include\partitionindex.h(82) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(93) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(93) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(93) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(93) : error C2061: syntax error : identifier 'search_param_t'
+f:\code\app\common\include\partitionindex.h(93) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(108) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(108) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(108) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(108) : error C2061: syntax error : identifier 'recfileinfo_t'
+f:\code\app\common\include\partitionindex.h(108) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(114) : error C2061: syntax error : identifier 'partition_index_header'
+f:\code\app\common\include\partitionindex.h(125) : error C2059: syntax error : '}'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(129) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(130) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(130) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(130) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(130) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(131) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(131) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(131) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(132) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(132) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(132) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(133) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(133) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(133) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(134) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(134) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(134) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(134) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(135) : warning C4142: benign redefinition of type
+f:\code\app\common\include\partitionindex.h(135) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(135) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(136) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(136) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(136) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(136) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(137) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(137) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(137) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(137) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(138) : error C2059: syntax error : ')'
+f:\code\app\common\include\diskmanage.h(15) : error C2061: syntax error : identifier 'partition_index'
+f:\code\app\common\include\diskmanage.h(18) : error C2059: syntax error : '}'
+f:\code\app\common\include\diskmanage.h(22) : error C2061: syntax error : identifier 'HddInfo'
+f:\code\app\common\include\diskmanage.h(23) : error C2059: syntax error : '}'
+f:\code\app\common\include\diskmanage.h(30) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\diskmanage.h(30) : error C2081: 'disk_manager' : name in formal parameter list illegal
+f:\code\app\common\include\diskmanage.h(30) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(30) : error C2059: syntax error : ')'
+f:\code\app\common\include\diskmanage.h(32) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\diskmanage.h(32) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(32) : error C2059: syntax error : ')'
+f:\code\app\common\include\diskmanage.h(33) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\diskmanage.h(33) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(33) : error C2059: syntax error : 'type'
+f:\code\app\common\include\diskmanage.h(33) : error C2059: syntax error : ')'
+f:\code\app\common\include\diskmanage.h(34) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\diskmanage.h(34) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(34) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\diskmanage.h(34) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\diskmanage.h(34) : error C2059: syntax error : 'type'
+f:\code\app\common\include\diskmanage.h(34) : error C2059: syntax error : ')'
+f:\code\app\common\include\diskmanage.h(35) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(35) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\diskmanage.h(35) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\diskmanage.h(35) : error C2059: syntax error : 'type'
+f:\code\app\common\include\diskmanage.h(35) : fatal error C1003: error count exceeds 100; stopping compilation
+partitionindex.c
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(17) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(23) : error C2010: '.' : unexpected in macro formal parameter list
+f:\code\app\common\include\partitionindex.h(43) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(43) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(43) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(43) : error C2061: syntax error : identifier 'chn_last_use_file'
+f:\code\app\common\include\partitionindex.h(43) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(55) : error C2061: syntax error : identifier 'chn_last_use_file'
+f:\code\app\common\include\partitionindex.h(58) : error C2059: syntax error : '}'
+f:\code\app\common\include\partitionindex.h(68) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(68) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(68) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(68) : error C2061: syntax error : identifier 'file_use_info'
+f:\code\app\common\include\partitionindex.h(68) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(82) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(82) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(82) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(82) : error C2061: syntax error : identifier 'segment_use_info'
+f:\code\app\common\include\partitionindex.h(82) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(93) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(93) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(93) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(93) : error C2061: syntax error : identifier 'search_param_t'
+f:\code\app\common\include\partitionindex.h(93) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(108) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\partitionindex.h(108) : error C2091: function returns function
+f:\code\app\common\include\partitionindex.h(108) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(108) : error C2061: syntax error : identifier 'recfileinfo_t'
+f:\code\app\common\include\partitionindex.h(108) : error C2059: syntax error : ';'
+f:\code\app\common\include\partitionindex.h(114) : error C2061: syntax error : identifier 'partition_index_header'
+f:\code\app\common\include\partitionindex.h(125) : error C2059: syntax error : '}'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(129) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(129) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(130) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(130) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(130) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(130) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(131) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(131) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(131) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(132) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(132) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(132) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(133) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(133) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(133) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(134) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(134) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(134) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(134) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(135) : warning C4142: benign redefinition of type
+f:\code\app\common\include\partitionindex.h(135) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\partitionindex.h(135) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(135) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(136) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(136) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(136) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(136) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(137) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(137) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(137) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(137) : error C2059: syntax error : ')'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2143: syntax error : missing ';' before '*'
+f:\code\app\common\include\partitionindex.h(138) : error C2059: syntax error : 'type'
+f:\code\app\common\include\partitionindex.h(138) : error C2059: syntax error : ')'
+f:\code\app\custommp4\source\partitionindex.c(22) : warning C4013: 'msync' undefined; assuming extern returning int
+f:\code\app\custommp4\source\partitionindex.c(36) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\custommp4\source\partitionindex.c(36) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\custommp4\source\partitionindex.c(36) : error C2059: syntax error : ')'
+f:\code\app\custommp4\source\partitionindex.c(37) : error C2054: expected '(' to follow 'index'
+f:\code\app\custommp4\source\partitionindex.c(44) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\custommp4\source\partitionindex.c(44) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\custommp4\source\partitionindex.c(44) : error C2059: syntax error : ')'
+f:\code\app\custommp4\source\partitionindex.c(45) : error C2054: expected '(' to follow 'index'
+f:\code\app\custommp4\source\partitionindex.c(54) : error C2146: syntax error : missing ';' before identifier 'header'
+f:\code\app\custommp4\source\partitionindex.c(54) : error C2065: 'header' : undeclared identifier
+f:\code\app\custommp4\source\partitionindex.c(55) : error C2275: 'u8' : illegal use of this type as an expression
+        f:\code\app\common\include\iflytype.h(11) : see declaration of 'u8'
+f:\code\app\custommp4\source\partitionindex.c(55) : error C2065: 'p' : undeclared identifier
+f:\code\app\custommp4\source\partitionindex.c(56) : error C2275: 'u32' : illegal use of this type as an expression
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\custommp4\source\partitionindex.c(56) : error C2146: syntax error : missing ';' before identifier 'verify'
+f:\code\app\custommp4\source\partitionindex.c(57) : error C2275: 'u32' : illegal use of this type as an expression
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\custommp4\source\partitionindex.c(57) : error C2146: syntax error : missing ';' before identifier 'file_len'
+f:\code\app\custommp4\source\partitionindex.c(57) : error C2065: 'file_len' : undeclared identifier
+f:\code\app\custommp4\source\partitionindex.c(58) : error C2143: syntax error : missing ';' before 'type'
+f:\code\app\custommp4\source\partitionindex.c(59) : error C2143: syntax error : missing ';' before 'type'
+f:\code\app\custommp4\source\partitionindex.c(60) : error C2065: 'nRet' : undeclared identifier
+f:\code\app\custommp4\source\partitionindex.c(65) : error C2224: left of '.full_file_nums' must have struct/union type
+f:\code\app\custommp4\source\partitionindex.c(65) : error C2224: left of '.total_file_nums' must have struct/union type
+f:\code\app\custommp4\source\partitionindex.c(65) : error C2224: left of '.recorded_file_nums' must have struct/union type
+f:\code\app\custommp4\source\partitionindex.c(65) : error C2224: left of '.total_file_nums' must have struct/union type
+f:\code\app\custommp4\source\partitionindex.c(65) : error C2224: left of '.full_file_offset' must have struct/union type
+f:\code\app\custommp4\source\partitionindex.c(65) : fatal error C1003: error count exceeds 100; stopping compilation
+util.c
+f:\code\app\common\include\custommp4.h(46) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(46) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(46) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(46) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(46) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(50) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(58) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(62) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(73) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(74) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(78) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(86) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(87) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(91) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(93) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(94) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(98) : error C2061: syntax error : identifier 'base_object_t'
+f:\code\app\common\include\custommp4.h(105) : error C2371: 'reserved1' : redefinition; different basic types
+        f:\code\app\common\include\custommp4.h(57) : see declaration of 'reserved1'
+f:\code\app\common\include\custommp4.h(106) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(117) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(117) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(117) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(117) : error C2061: syntax error : identifier 'mdat_segment_info_table_t'
+f:\code\app\common\include\custommp4.h(117) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(128) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(128) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(128) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(128) : error C2061: syntax error : identifier 'video_frame_info_table_t'
+f:\code\app\common\include\custommp4.h(128) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(137) : error C2143: syntax error : missing ')' before '('
+f:\code\app\common\include\custommp4.h(137) : error C2091: function returns function
+f:\code\app\common\include\custommp4.h(137) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(137) : error C2061: syntax error : identifier 'audio_frame_info_table_t'
+f:\code\app\common\include\custommp4.h(137) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(151) : error C2061: syntax error : identifier 'file_properties_object_t'
+f:\code\app\common\include\custommp4.h(152) : error C2061: syntax error : identifier 'vspot'
+f:\code\app\common\include\custommp4.h(152) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(153) : error C2061: syntax error : identifier 'aspot'
+f:\code\app\common\include\custommp4.h(153) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(154) : error C2061: syntax error : identifier 'mvot'
+f:\code\app\common\include\custommp4.h(154) : error C2059: syntax error : ';'
+f:\code\app\common\include\custommp4.h(156) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(158) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(159) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(182) : error C2059: syntax error : '}'
+f:\code\app\common\include\custommp4.h(187) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(188) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(190) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(190) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(190) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(190) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\custommp4.h(190) : error C2146: syntax error : missing ';' before identifier 'time_scale'
+f:\code\app\common\include\custommp4.h(190) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(190) : error C2059: syntax error : 'type'
+f:\code\app\common\include\custommp4.h(190) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(191) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(191) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(191) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(191) : error C2370: 'u32' : redefinition; different storage class
+        f:\code\app\common\include\iflytype.h(13) : see declaration of 'u32'
+f:\code\app\common\include\custommp4.h(191) : error C2146: syntax error : missing ';' before identifier 'time_scale'
+f:\code\app\common\include\custommp4.h(191) : warning C4142: benign redefinition of type
+f:\code\app\common\include\custommp4.h(191) : error C2059: syntax error : 'type'
+f:\code\app\common\include\custommp4.h(191) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(193) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(193) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(193) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(194) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(194) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(194) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(196) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(196) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(196) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(198) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(198) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(198) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(199) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(199) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(199) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(201) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(201) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(201) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(202) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(202) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(202) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(203) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(203) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(203) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(204) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(204) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(204) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(205) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(205) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(205) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(206) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(206) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(206) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(207) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(207) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(207) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(209) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(209) : error C2143: syntax error : missing '{' before '*'
+f:\code\app\common\include\custommp4.h(209) : error C2059: syntax error : ')'
+f:\code\app\common\include\custommp4.h(210) : error C2143: syntax error : missing ')' before '*'
+f:\code\app\common\include\custommp4.h(210) : fatal error C1003: error count exceeds 100; stopping compilation
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+custommp4.lib - 408 error(s), 11 warning(s)
+</pre>
+</body>
+</html>

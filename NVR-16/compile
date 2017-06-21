@@ -1,0 +1,316 @@
+#./BuildEnv
+rm -rf /tftpboot/*.so
+
+cd onvif
+./go.sh
+cd -
+echo -e ""
+echo -e ""
+echo -e "onvif Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd nvr_hs35xx_lib/src
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "nvr_hs35xx_lib Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ipcamera/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "ipcamera Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd minirtsp/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "minirtsp Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd g726/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "g726 Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ctrlprotocol/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "ctrlprotocol Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd iflyapi/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "iflyapi Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd owsp/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "owsp Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Resources/custommp4/custommp4/prjlinux
+make clean;make;
+cd -
+echo -e ""
+echo -e ""
+echo -e "custommp4 Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Public;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Public Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModPreview;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Preview Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModEncode;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Encode Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModRecord;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Record Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModPlayback;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Playback Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Tools;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Tools Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModPtz;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Ptz Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModAlarm;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Alarm Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModUser;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "User Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModConfig;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "config Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModLog;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Log Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModSyscomplex;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Syscomplex Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd ModNet;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Net Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Other/FrontBoard;./go.sh;cd -
+echo -e ""
+echo -e ""
+echo -e "FrontBoard Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Other/Graphics_Mouse/build;make -f Makefile_libmouse clean; make -f Makefile_libmouse;make -f Makefile_libgraphics clean; make -f Makefile_libgraphics;\cp *.a ../../../common/lib/;cd -
+echo -e ""
+echo -e ""
+echo -e "Graphics_Mouse Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Other/jpeg-6b;./go.sh;cd -
+echo -e ""
+echo -e ""
+echo -e "jpeg-6b Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Other/lua-5.0.2;./go.sh;cd -
+echo -e ""
+echo -e ""
+echo -e "lua-5.0.2 Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Other/zlib-1.2.3;./go.sh;cd -
+echo -e ""
+echo -e ""
+echo -e "zlib-1.2.3 Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd Biz;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "Biz Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd GuiSample1;make clean;make;cd -
+echo -e ""
+echo -e ""
+echo -e "GuiSample1 Over"
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+echo -e ""
+
+cd mydaemon
+./go.sh
+cd -
+
+chmod -R 777 /tftpboot

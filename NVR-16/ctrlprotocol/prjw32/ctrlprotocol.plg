@@ -1,0 +1,29 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: ctrlprotocol - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP247.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../include" /I "../../common/include" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/ctrlprotocol.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\ctrlprotocol\source\ctrlprotocol.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\ctrlprotocol\source\vsip.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP247.tmp" 
+Creating command line "link.exe -lib /nologo /out:"Debug\ctrlprotocol.lib"  ".\Debug\ctrlprotocol.obj" ".\Debug\vsip.obj" "
+<h3>Output Window</h3>
+Compiling...
+ctrlprotocol.c
+vsip.c
+Creating library...
+
+
+
+<h3>Results</h3>
+ctrlprotocol.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

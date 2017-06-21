@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: zlib - Win32 DLL Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\junhu\LOCALS~1\Temp\RSP1A1A.tmp" with contents
+[
+/nologo /dll /incremental:no /pdb:"Win32_DLL_Release/zlib1.pdb" /machine:I386 /def:"..\..\win32\zlib.def" /out:"Win32_DLL_Release\zlib1.dll" /implib:"Win32_DLL_Release/zlib1.lib" 
+".\Win32_DLL_Release\adler32.obj"
+".\Win32_DLL_Release\compress.obj"
+".\Win32_DLL_Release\crc32.obj"
+".\Win32_DLL_Release\deflate.obj"
+".\Win32_DLL_Release\gzio.obj"
+".\Win32_DLL_Release\infback.obj"
+".\Win32_DLL_Release\inffast.obj"
+".\Win32_DLL_Release\inflate.obj"
+".\Win32_DLL_Release\inftrees.obj"
+".\Win32_DLL_Release\trees.obj"
+".\Win32_DLL_Release\uncompr.obj"
+".\Win32_DLL_Release\zutil.obj"
+".\Win32_DLL_Release\zlib1.res"
+]
+Creating command line "link.exe @C:\DOCUME~1\junhu\LOCALS~1\Temp\RSP1A1A.tmp"
+<h3>Output Window</h3>
+Linking...
+   Creating library Win32_DLL_Release/zlib1.lib and object Win32_DLL_Release/zlib1.exp
+
+
+
+<h3>Results</h3>
+zlib1.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

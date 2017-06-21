@@ -1,0 +1,59 @@
+#CROSS_COMPILE = arm_v5t_le-
+#CROSS_COMPILE = powerpc-linux-
+CROSS_COMPILE = arm-hisiv100nptl-linux-
+
+CCILINUX_eti_CC    := $(CROSS_COMPILE)gcc
+CCILINUX_eti_CPP   := $(CROSS_COMPILE)g++
+CCILINUX_eti_LD    := $(CROSS_COMPILE)ld
+CCILINUX_eti_AR    := $(CROSS_COMPILE)ar
+CCILINUX_eti_STRIP := $(CROSS_COMPILE)strip
+
+INC_DIR := ../include
+SRC_DIR := ../source
+
+APP_TARGET := testapi
+INSTALL_APP_PATH := /mnt/nfs
+
+CFLAGS += -O2 -Wall -fno-strict-aliasing
+CFLAGS += -DUSE_PIPE
+LDFLAGS += -lpthread
+
+INC_PATH += $(INC_DIR) ../../common/include
+LIB_PATH += ../../common/lib/debug
+
+CFLAGS  += $(foreach dir,$(INC_PATH),-I$(dir))
+LDFLAGS += $(foreach lib,$(LIB_PATH),-L$(lib))
+
+OBJS :=	$(SRC_DIR)/debug/main				\
+		$(SRC_DIR)/debug/common				\
+		$(SRC_DIR)/debug/urat				\
+		$(SRC_DIR)/debug/net				\
+		$(SRC_DIR)/debug/bbfunc				\
+		$(SRC_DIR)/debug/ftp				\
+		$(SRC_DIR)/debug/mount				\
+		$(SRC_DIR)/debug/umount				\
+		$(SRC_DIR)/debug/fdisk				\
+		$(SRC_DIR)/debug/mkfsdos            \
+		$(SRC_DIR)/debug/wget           	\
+		#$(SRC_DIR)/debug/rtc				\
+
+OBJS := $(foreach obj,$(OBJS),$(obj).o)
+
+$(SRC_DIR)/debug/%.o: $(SRC_DIR)/%.c
+	$(CCILINUX_eti_CC) $(CFLAGS) -c $< -o $@  
+$(SRC_DIR)/debug/%.o: $(SRC_DIR)/%.cpp
+	$(CCILINUX_eti_CPP) $(CFLAGS) -c $< -o $@
+	
+all:$(APP_TARGET)
+$(APP_TARGET): $(OBJS)
+	$(CCILINUX_eti_CC) -o $(APP_TARGET) $(OBJS) $(LDFLAGS)
+	$(CCILINUX_eti_STRIP) $(APP_TARGET)
+	install -m 0755 $(APP_TARGET) $(INSTALL_APP_PATH)
+
+clean:
+	rm -f $(OBJS) *.pdb *.map
+	rm -f $(APP_TARGET)
+
+print: $(SRC_DIR)/*.c
+	lpr -p $?
+	touch print

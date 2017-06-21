@@ -1,0 +1,77 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: iflyapi - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP2F7.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/iflyapi.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\bbfunc.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\common.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\fdisk.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\ftp.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\main.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\mkfsdos.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\mount.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\net.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\rtc.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\umount.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\urat.c"
+"E:\newcvs\07-002\03 开发区\07 Project\src\app\iflyapi\source\wget.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP2F7.tmp" 
+Creating temporary file "C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP2F8.tmp" with contents
+[
+/nologo /out:"Debug\iflyapi.lib" 
+".\Debug\bbfunc.obj"
+".\Debug\common.obj"
+".\Debug\fdisk.obj"
+".\Debug\ftp.obj"
+".\Debug\main.obj"
+".\Debug\mkfsdos.obj"
+".\Debug\mount.obj"
+".\Debug\net.obj"
+".\Debug\rtc.obj"
+".\Debug\umount.obj"
+".\Debug\urat.obj"
+".\Debug\wget.obj"
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\chensp\LOCALS~1\Temp\RSP2F8.tmp"
+<h3>Output Window</h3>
+Compiling...
+bbfunc.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\bbfunc.c(1) : fatal error C1083: Cannot open include file: 'bbfunc.h': No such file or directory
+common.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\common.c(1) : fatal error C1083: Cannot open include file: 'common.h': No such file or directory
+fdisk.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\fdisk.c(11) : fatal error C1083: Cannot open include file: 'bbfunc.h': No such file or directory
+ftp.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\ftp.c(6) : fatal error C1083: Cannot open include file: 'sys/socket.h': No such file or directory
+main.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\main.c(2) : fatal error C1083: Cannot open include file: 'common.h': No such file or directory
+mkfsdos.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\mkfsdos.c(54) : fatal error C1083: Cannot open include file: 'linux/hdreg.h': No such file or directory
+mount.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\mount.c(23) : fatal error C1083: Cannot open include file: 'mntent.h': No such file or directory
+net.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\net.c(1) : fatal error C1083: Cannot open include file: 'unistd.h': No such file or directory
+rtc.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\rtc.c(1) : fatal error C1083: Cannot open include file: 'sys/ioctl.h': No such file or directory
+umount.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\umount.c(16) : fatal error C1083: Cannot open include file: 'mntent.h': No such file or directory
+urat.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\urat.c(3) : fatal error C1083: Cannot open include file: 'unistd.h': No such file or directory
+wget.c
+e:\newcvs\07-002\03 开发区\07 project\src\app\iflyapi\source\wget.c(5) : fatal error C1083: Cannot open include file: 'alloca.h': No such file or directory
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+iflyapi.lib - 12 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
