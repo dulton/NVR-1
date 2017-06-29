@@ -186,7 +186,7 @@ typedef enum
     EM_BIZREC_MASK_TIMING = (1 << 1), //定时录像
     EM_BIZREC_MASK_MOTION = (1 << 2), //移动侦测录像
     EM_BIZREC_MASK_SENSORALARM = (1 << 3), //传感器报警录像
-} EMBIZRECSTATUSMASK;
+} EMBIZRECSTATUSMASK; //第8位是预录的标志
 
 typedef struct
 {

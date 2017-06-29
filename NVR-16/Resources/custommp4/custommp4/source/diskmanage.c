@@ -489,12 +489,14 @@ int init_disk_manager(disk_manager *hdd_manager)
 			strcpy(hdd_manager->hinfo[nDiskFound].disk_name, diskname);
 			strcpy(hdd_manager->hinfo[nDiskFound].disk_sn, DiskSN);
 
+			#if 1
+			
 			//坏盘判断
 			// 1、第二扇区是否有坏盘标记
 			// 2、配置文件是否有坏盘标记
 			int is_mark_bad_by_sector_flag = is_mark_bad_by_sector(hdd_manager->hinfo[nDiskFound].disk_name);
 			int is_mark_bad_by_config_flag = is_mark_bad_by_config(hdd_manager->hinfo[nDiskFound].disk_sn);
-			#if 1
+			
 			if (is_mark_bad_by_sector_flag || is_mark_bad_by_config_flag)
 			{
 				hdd_manager->hinfo[nDiskFound].is_bad_disk = 1;
@@ -509,89 +511,89 @@ int init_disk_manager(disk_manager *hdd_manager)
 					mark_bad_disk_2_config(hdd_manager, hdd_manager->hinfo[nDiskFound].disk_sn);
 				}
 			}
-			else //非坏盘
+			
 			#endif
+		
+			for(i = 0; i < MAX_PARTITION_NUM; i++)
 			{
-				for(i = 0; i < MAX_PARTITION_NUM; i++)
+				sprintf(devname,"%s%d",diskname,i+1);
+				fd = open(devname, O_RDONLY);
+				if (fd < 0)
 				{
-					sprintf(devname,"%s%d",diskname,i+1);
-					fd = open(devname, O_RDONLY);
-					if (fd < 0)
+					printf("%s open %s failed, %s\n", __func__, devname, strerror(errno));
+
+					//yaogang modify for bad disk
+					//continue;
+					break;
+				}
+				
+				close(fd);
+
+				 //yaogang modify 20170218 in shanghai
+				//hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 1;
+				sprintf(mountname,"rec/%c%d",'a'+nDiskFound,i+1);//newdisk???
+				
+				int rtn = mkdir(mountname,1);
+				if(rtn)
+				{
+					//已经存在。 机器在客户那边是不会出现的，
+					//只会出现在测试阶段，不重启系统只重新启动myapp
+					if (EEXIST == errno)
 					{
-						printf("%s open %s failed, %s\n", __func__, devname, strerror(errno));
-
-						//yaogang modify for bad disk
-						//continue;
-						break;
-					}
-					
-					close(fd);
-
-					 //yaogang modify 20170218 in shanghai
-					//hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 1;
-					sprintf(mountname,"rec/%c%d",'a'+nDiskFound,i+1);//newdisk???
-					
-					int rtn = mkdir(mountname,1);
-					if(rtn)
-					{
-						//已经存在。 机器在客户那边是不会出现的，
-						//只会出现在测试阶段，不重启系统只重新启动myapp
-						if (EEXIST == errno)
-						{
-							umount_user(mountname);
-						}
-						else
-						{
-							printf("%s mkdir %s failed, errno: %d,%s\n", __func__, mountname, errno, strerror(errno));
-
-							break;
-						}
-					}
-					
-					//printf("before mount_user_0:%s...\n",devname);
-					if (0 != mount_user(devname, mountname))
-					{
-						break;
-					}
-					//printf("after mount_user_0:%s...\n",devname);
-					
-					if (1 == init_partition_index(&hdd_manager->hinfo[nDiskFound].ptn_index[i], mountname))
-					{//printf("after init_partition_index_0:%s...\n",mountname);
-					
-						hdd_manager->hinfo[nDiskFound].disk_total += (u32)(get_partition_total_space(&hdd_manager->hinfo[nDiskFound].ptn_index[i])/1000);
-						hdd_manager->hinfo[nDiskFound].disk_free += (u32)(get_partition_free_space(&hdd_manager->hinfo[nDiskFound].ptn_index[i])/1000);
-
-						hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 1;
-						
-						printf("%s init_partition_index %s success\n", __func__, devname);
+						umount_user(mountname);
 					}
 					else
 					{
-						printf("%s init_partition_index %s failed\n", __func__, devname);
+						printf("%s mkdir %s failed, errno: %d,%s\n", __func__, mountname, errno, strerror(errno));
 
 						break;
 					}
 				}
 				
-				//yaogang modify for bad disk
-				if (i < MAX_PARTITION_NUM)//期间出错
-				{					
-					for(i = 0; i < MAX_PARTITION_NUM; i++)
-					{	
-						if (hdd_manager->hinfo[nDiskFound].is_partition_exist[i])
-						{
-							destroy_partition_index(&hdd_manager->hinfo[nDiskFound].ptn_index[i]);
-							sprintf(mountname,"rec/%c%d",'a'+nDiskFound,i+1);
-							umount_user(mountname);
+				//printf("before mount_user_0:%s...\n",devname);
+				if (0 != mount_user(devname, mountname))
+				{
+					break;
+				}
+				//printf("after mount_user_0:%s...\n",devname);
+				
+				if (1 == init_partition_index(&hdd_manager->hinfo[nDiskFound].ptn_index[i], mountname))
+				{//printf("after init_partition_index_0:%s...\n",mountname);
+				
+					hdd_manager->hinfo[nDiskFound].disk_total += (u32)(get_partition_total_space(&hdd_manager->hinfo[nDiskFound].ptn_index[i])/1000);
+					hdd_manager->hinfo[nDiskFound].disk_free += (u32)(get_partition_free_space(&hdd_manager->hinfo[nDiskFound].ptn_index[i])/1000);
 
-							hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 0;
-						}
-					}
+					hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 1;
+					
+					printf("%s init_partition_index %s success\n", __func__, devname);
+				}
+				else
+				{
+					printf("%s init_partition_index %s failed\n", __func__, devname);
 
-					hdd_manager->hinfo[nDiskFound].disk_total = 0;
-					hdd_manager->hinfo[nDiskFound].disk_free = 0;
+					break;
 				}
 			}
+			
+			//yaogang modify for bad disk
+			if (i < MAX_PARTITION_NUM)//期间出错
+			{					
+				for(i = 0; i < MAX_PARTITION_NUM; i++)
+				{	
+					if (hdd_manager->hinfo[nDiskFound].is_partition_exist[i])
+					{
+						destroy_partition_index(&hdd_manager->hinfo[nDiskFound].ptn_index[i]);
+						sprintf(mountname,"rec/%c%d",'a'+nDiskFound,i+1);
+						umount_user(mountname);
+
+						hdd_manager->hinfo[nDiskFound].is_partition_exist[i] = 0;
+					}
+				}
+
+				hdd_manager->hinfo[nDiskFound].disk_total = 0;
+				hdd_manager->hinfo[nDiskFound].disk_free = 0;
+			}
+			
 			
 			nDiskFound++;
 			if(nDiskFound == MAX_HDD_NUM)

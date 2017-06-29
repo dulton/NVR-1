@@ -334,9 +334,9 @@ void* NetCommInitThxd( void* para )
 	}
 	
 	// create queue for stream get
-	nSendBufNum		= pCfg->nSendBufNumPerChn;
-	nChnNum			= pCfg->nSubStreamMax;// default chnnum == substreamnum
-	nFrameSizeMax	= pCfg->nFrameSizeMax;
+	nSendBufNum		= pCfg->nSendBufNumPerChn;// 3
+	nChnNum			= pCfg->nSubStreamMax;// 16 default chnnum == substreamnum
+	nFrameSizeMax	= pCfg->nFrameSizeMax;//520192
 	
 #if 0//csp modify
 	if( !initMsgQ(&pNCCIns->netsndMsgQ, 
@@ -362,6 +362,7 @@ void* NetCommInitThxd( void* para )
 	
 	printf("#############################initMsgQ bufnum %d chnnum %d framesizemax %d MsgQLen %d\n", nSendBufNum, nChnNum, nFrameSizeMax, nFrameSizeMax * nChnNum);
 #else
+	#if 0
 	if(nChnNum == 8)
 	{
 		#if defined(_JMV_) || defined(_JUAN_)//R9508S
@@ -385,16 +386,43 @@ void* NetCommInitThxd( void* para )
 		#endif
 	}
 	else
+	#endif
 	{
+		
+	#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+		pNCCIns->pnetsndMsgQ = malloc(nChnNum * sizeof(ifly_msgQ_t));
+		if( NULL == pNCCIns->pnetsndMsgQ )
+		{
+			NETCOMM_DEBUG_STR("allocate memory for pnetsndMsgQ!!\n", -1);
+			errCode = -1;
+			goto NCINIT_ERR;
+		}
+		memset(pNCCIns->pnetsndMsgQ, 0, nChnNum * sizeof(ifly_msgQ_t));
+		
+		int msgnum = nSendBufNum * 24;//main sub third 1S
+		for(i=0; i<nChnNum; i++)
+		{
+			if(!initMsgQ(&pNCCIns->pnetsndMsgQ[i], msgnum, nFrameSizeMax * 4, 64))//main 1.5M sub 0.5M
+			{
+				NETCOMM_DEBUG_STR("initMsgQ pnetsndMsgQ[%d]", i);
+				errCode = -1;
+				goto NCINIT_ERR;
+			}
+		}
+		
+	#else
 		//csp modify 20121016//这里需要验证
 		int msgnum = nSendBufNum * nChnNum * 2 * 6;//csp modify 20140315
 		//if(!initMsgQ(&pNCCIns->netsndMsgQ, nSendBufNum * nChnNum * 2, nFrameSizeMax * nChnNum * 2, 64))
+		//printf("%s: msgnum: %d, totallen: %d\n", __func__, msgnum, nFrameSizeMax * nChnNum * 2);
 		if(!initMsgQ(&pNCCIns->netsndMsgQ, msgnum, nFrameSizeMax * nChnNum * 2, 64))
 		{
 			NETCOMM_DEBUG_STR("initMsgQ", -1);
 			errCode = -1;
 			goto NCINIT_ERR;
 		}
+	#endif
+		
 	}
 	
 	//4SDI:#############################initMsgQ bufnum 6 chnnum 4 framesizemax 1048576 MsgQLen 8388608
@@ -724,6 +752,7 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 	u8*	pQBuf = NULL;
 	u32 nDataLen = 0;
 	PSNetCommCtrl pNCCIns = NULL;
+	u8 nChn = pHead->byChnIndex;
 	
 	pNCCIns = &sNetCommCtrl;
 	
@@ -759,7 +788,11 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 			
 			//csp modify
 			//if(GetMsgQWriteInfo(&pNCCIns->netsndAudioMsgQ, &pQBuf, &nDataLen))
+		#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+			if(GetMsgQWriteInfo(&pNCCIns->pnetsndMsgQ[nChn], &pQBuf, &nDataLen))
+		#else
 			if(GetMsgQWriteInfo(&pNCCIns->netsndMsgQ, &pQBuf, &nDataLen))
+		#endif
 			{
 				memcpy(pQBuf, pHead, sizeof(SNetComStmHead));
 				memcpy(pQBuf+sizeof(SNetComStmHead), pBuf, nDataLen);
@@ -767,7 +800,11 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 				//csp modify
 				//post msg queue
 				//skipWriteMsgQ(&pNCCIns->netsndAudioMsgQ);
-				skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+				#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+					skipWriteMsgQ(&pNCCIns->pnetsndMsgQ[nChn]);
+				#else
+					skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+				#endif
 				
 				return 0;
 			}
@@ -790,7 +827,7 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 				{
 					if(pNCCIns->pnLostFrame[1][pHead->byChnIndex])
 					{
-						if(pHead->byFrameType)
+						if(pHead->byFrameType)//I frame
 						{
 							pNCCIns->pnLostFrame[1][pHead->byChnIndex] = 0;
 						}
@@ -863,17 +900,25 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 				}
 				#else
 				//send to preview
-				if(GetMsgQWriteInfo(&pNCCIns->netsndMsgQ, &pQBuf, &nDataLen))
+				#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+					if(GetMsgQWriteInfo(&pNCCIns->pnetsndMsgQ[nChn], &pQBuf, &nDataLen))
+				#else
+					if(GetMsgQWriteInfo(&pNCCIns->netsndMsgQ, &pQBuf, &nDataLen))
+				#endif
 				{
 					//printf("chn%d w:%d, h:%d, len:%d\n", pHead->byChnIndex, pHead->nWidth, pHead->nHeight, pHead->dwlen);
 					memcpy(pQBuf, pHead, sizeof(SNetComStmHead));
 					memcpy(pQBuf+sizeof(SNetComStmHead), pBuf, pHead->dwlen/*nDataLen*/);
 					//post msg queue
-					skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+					#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+						skipWriteMsgQ(&pNCCIns->pnetsndMsgQ[nChn]);
+					#else
+						skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+					#endif
 					//printf("len:%d\n", pHead->dwlen);
 					//NETCOMM_DEBUG_STR("GetMsgQWriteInfo success!!!", 0);
 				}
-				else
+				else //写入失败，丢帧计数
 				{
 					//if(pHead->byChnIndex == 0) printf("chn%d net video get buff failed, len:%d\n", pHead->byChnIndex, pHead->dwlen);
 					//NETCOMM_DEBUG_STR("video GetMsgQWriteInfo failed!!!", pHead->eFrameType);
@@ -925,12 +970,20 @@ s32 NetCommSendPreviewFrame(PSNetComStmHead pHead, u8* pBuf)
 				nDataLen = pHead->dwlen+sizeof(SNetComStmHead);
 				
 				//send to preview
-				if(GetMsgQWriteInfo(&pNCCIns->netsndMsgQ, &pQBuf, &nDataLen))
+				#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+					if(GetMsgQWriteInfo(&pNCCIns->pnetsndMsgQ[nChn], &pQBuf, &nDataLen))
+				#else
+					if(GetMsgQWriteInfo(&pNCCIns->netsndMsgQ, &pQBuf, &nDataLen))
+				#endif
 				{
 					memcpy(pQBuf, pHead, sizeof(SNetComStmHead));
 					memcpy(pQBuf+sizeof(SNetComStmHead), pBuf, pHead->dwlen/*nDataLen*/);
-					
-					skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+
+					#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+						skipWriteMsgQ(&pNCCIns->pnetsndMsgQ[nChn]);
+					#else
+						skipWriteMsgQ(&pNCCIns->netsndMsgQ);
+					#endif					
 				}
 				else
 				{
@@ -1025,7 +1078,7 @@ s32 netComm_Ack( u32 err, int sock, u32 nAckId )
 	
 	ack.ackid = htonl(nAckId);
 	ack.errcode = htonl(err);
-	printf("lind_id: %u, err: %d\n", nAckId, err);
+	//printf("lind_id: %u, err: %d\n", nAckId, err);
 	loopsend_ex((SOCKHANDLE)sock, (char *)&ack, sizeof(ack));
 	
 	if(err)

@@ -938,6 +938,12 @@ void *CPTaskProc(void *pParam)
 								struct sockaddr_in* pAddr = pAddStreamLinkCBContext;
 								memcpy(pAddr, &clientaddr, sizeof(clientaddr));
 							}
+
+							printf("client ip: %s, req cmd: %d, chn: %d, type:%d\n", 
+								inet_ntoa(clientaddr.sin_addr), 
+								reqhdr.command, 
+								reqhdr.Monitor_t.chn,
+								reqhdr.Monitor_t.type);
 							
 							int ret = pAddStreamLinkCB(hTmp, reqhdr, pAddStreamLinkCBContext);
 							if (ret < 0)

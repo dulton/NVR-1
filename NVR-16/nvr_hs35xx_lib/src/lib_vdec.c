@@ -47,6 +47,8 @@
 //csp modify 20140406
 #define VDEC_PAUSE_ZOOM_DEBUG
 
+#define VDEC_FRAME_MODE
+//#undef VIDEO_MODE_FRAME
 //csp modify 20140406
 static unsigned char is_playing = 0;
 unsigned char GetPlayingStatus()
@@ -440,7 +442,7 @@ HI_S32 SAMLE_COMM_VDEC_UnBindVpss(VDEC_CHN VdChn, VPSS_GRP VpssGrp)
 	
 	return HI_SUCCESS;
 }
-
+/*
 //yaogang modify 20150921
 //无须加锁，上层函数在使用时已经加锁
 typedef struct
@@ -455,7 +457,7 @@ typedef struct
 }vdec_chn_pts_s;//对解码通道PTS的处理
 
 static vdec_chn_pts_s pts_per_chn[ARG_CHN_MAX];
-
+*/
 
 /******************************************************************************
 * function : create vdec chn
@@ -491,7 +493,11 @@ HI_S32 SAMPLE_VDEC_CreateVdecChn(HI_S32 s32ChnID, SIZE_S *pstSize, PAYLOAD_TYPE_
 		case PT_H264:
 			#ifdef HI3520D
 			stAttr.stVdecVideoAttr.u32RefFrameNum = 2;//1;//csp modify 20140307
-			stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_STREAM;//VIDEO_MODE_FRAME;
+				#ifdef VDEC_FRAME_MODE
+					stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_FRAME;
+				#else
+					stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_STREAM;
+				#endif
 			stAttr.stVdecVideoAttr.s32SupportBFrame = 0;//0;
 			//csp modify 20140406
 			if(GetPlayingStatus())
@@ -509,7 +515,11 @@ HI_S32 SAMPLE_VDEC_CreateVdecChn(HI_S32 s32ChnID, SIZE_S *pstSize, PAYLOAD_TYPE_
 			//printf("create decoder[%d] u32RefFrameNum:%d\n",s32ChnID,stAttr.stVdecVideoAttr.u32RefFrameNum);
 			#else
 			stAttr.stVdecVideoAttr.u32RefFrameNum = 2;//1;
-			stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_STREAM;//VIDEO_MODE_FRAME;
+				#ifdef VDEC_FRAME_MODE
+					stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_FRAME;
+				#else
+					stAttr.stVdecVideoAttr.enMode = VIDEO_MODE_STREAM;
+				#endif
 			stAttr.stVdecVideoAttr.s32SupportBFrame = 1;//0;
 			#endif
 			break;
@@ -2848,17 +2858,21 @@ int nvr_preview_vdec_write(int chn, vdec_stream_s *pin_stream)
 						
 						#ifdef VDEC_FRAME_MODE
 						stStream.u64PTS = pin_stream->pts;
-						stStream.bEndOfFrame  = HI_TRUE;
-						stStream.bEndOfStream = HI_FALSE;
+							#ifdef HI3535
+								stStream.bEndOfFrame  = HI_TRUE;
+								stStream.bEndOfStream = HI_FALSE;
+							#endif
 						#else
 						stStream.u64PTS = 0;
 						#endif
 						
-						
 						chn = real_chn;
-						
-						//s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, HI_IO_BLOCK);
-						s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, -1);//HI3535 SDK API修改
+
+						#ifdef HI3535
+							s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, -1);//HI3535 SDK API修改
+						#else
+							s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, HI_IO_BLOCK);
+						#endif
 						if(HI_SUCCESS != s32ret)
 						{
 							//csp modify 20150110
@@ -3295,14 +3309,19 @@ int nvr_preview_vdec_write(int chn, vdec_stream_s *pin_stream)
 	stStream.u32Len = pin_stream->len;
 	#ifdef VDEC_FRAME_MODE
 	stStream.u64PTS = pin_stream->pts;
-	stStream.bEndOfFrame  = HI_TRUE;
-	stStream.bEndOfStream = HI_FALSE;
+		#ifdef HI3535
+			stStream.bEndOfFrame  = HI_TRUE;
+			stStream.bEndOfStream = HI_FALSE;
+		#endif
 	#else
 	stStream.u64PTS = 0;
 	#endif
 	
-	//s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, HI_IO_BLOCK);
-	s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, -1);
+	#ifdef HI3535
+		s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, -1);//HI3535 SDK API修改
+	#else
+		s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, HI_IO_BLOCK);
+	#endif
 	
 	unsigned int t2 = getTimeStamp();
 	if(t2-t1>30) printf("chn%02d dec span:%u###\n",real_chn,t2-t1);

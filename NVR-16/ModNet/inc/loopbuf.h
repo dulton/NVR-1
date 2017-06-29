@@ -14,7 +14,7 @@ typedef struct
 	#ifdef MSGQ_OPT
 	u32 *buf_start;
 	u32 *buf_num;
-	u32 *buf_jump;
+	u32 *buf_jump;// free_pos 到unitNum 这段空间不足以存放数据时，跳过该段空间，从头存放
 	#ifdef MSGQ_H264_OVERLAY
 	u32 *gop_id;
 	u32 last_gop;

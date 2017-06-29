@@ -692,8 +692,8 @@ extern unsigned int getTimeStamp();
 
 //#define IPC_PROTOCOL_TEST //test record disk error by yaogang 20170222
 
-#define	UsePreviewQueue
-//#undef	UsePreviewQueue
+//#define	UsePreviewQueue
+#undef	UsePreviewQueue
 
 #ifdef	UsePreviewQueue
 

@@ -156,14 +156,29 @@ s32 remotePreview_Init(
 	pCtrl->pRmtPrvwCB = pFxn;
 	if(!pFxn)
 	{
-		printf("callback null!!\n");
+		printf("pFxn null!!\n");
 		rtn = -1;
 		
 		goto END;
 	}
+	
 	pCtrl->pReqKeyCB	= pReqKeyCB;
+	if(!pReqKeyCB)
+	{
+		printf("pReqKeyCB null!!\n");
+	}
+	
 	pCtrl->pVOIPCB		= pVOIP;
+	if(!pVOIP)
+	{
+		printf("pVOIP null!!\n");
+	}
+	
 	pCtrl->pVOIPCBIn	= pVOIPIn;	
+	if(!pVOIPIn)
+	{
+		printf("pVOIPIn null!!\n");
+	}
 	
 	// allocate memory for ctrl blocks
 	pCtrl->nStreamTcpNum = nStreamTcpNum;
@@ -231,7 +246,15 @@ s32 remotePreview_Init(
 	//IFly_CreateThread(RemotePreviewThread, NULL, PRI_MEDIASND, STKSIZE_MEDIASND, (u32)&pNCCtrl->netsndAudioMsgQ, 0, NULL);//csp modify
 	//csp modify 20140302
 	////IFly_CreateThread(RemotePreviewThread, NULL, PRI_MEDIASND, STKSIZE_MEDIASND+64*1024, (u32)&pNCCtrl->netsndMsgQ, 0, NULL);
-	IFly_CreateThread(RemotePreviewThread, NULL, PRI_MEDIASND, (1<<20), (u32)&pNCCtrl->netsndMsgQ, 0, NULL);
+	
+		#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+			for(i=0; i<nVidTcpNum; i++)
+			{
+				IFly_CreateThread(RemotePreviewThread, NULL, PRI_MEDIASND, (1<<20), i, 0, NULL);
+			}
+		#else
+			IFly_CreateThread(RemotePreviewThread, NULL, PRI_MEDIASND, (1<<20), (u32)&pNCCtrl->netsndMsgQ, 0, NULL);
+		#endif
 	#endif
 #else
 	rtn = pthread_create(&previewThxd,
@@ -348,6 +371,7 @@ s32 remotePreview_Request(ifly_TCP_Stream_Req* pReq, SOCKHANDLE sock, u32 nId)
 			NetComm_GetThirdStreamProperty(&property);
 			if(property.support && pReq->reserved[6] == 0x5A)
 			{
+				//请求端当前预览样式(单画面，4画面，9画面，16画面)
 				if(pReq->reserved[0] > property.wnd_num_threshold)
 				{
 				#if 1
@@ -403,6 +427,7 @@ s32 remotePreview_Request(ifly_TCP_Stream_Req* pReq, SOCKHANDLE sock, u32 nId)
 	}
 	
 	//printf("pStmSndCtrl %p\n", pStmSndCtrl);
+	printf("%s req chn: %d, type: %d\n", __func__, sReq.nChn, sReq.nType);
 	
 	SNCSSCtrl1Link*	pLnkCtrl = NULL;
 	for(j = 0; j < EACH_STREAM_TCP_LINKS; j++)
@@ -964,6 +989,7 @@ void* RemotePreviewThread(void* param)
 	u32		 dwReadLen, j;
 	FRAMEHDR tVideoFRAMEHDR;
 	FRAMEHDR tAudioFRAMEHDR;
+	u32 nChn = (u32)param;
 	
 	#ifdef CHIP_HISI3531
 	u8 sFrameBuf[NET_SEND_FRAME_SIZE_MAX2] = {0};//这里明显会越过此线程的堆栈
@@ -992,8 +1018,14 @@ void* RemotePreviewThread(void* param)
 	tAudioFRAMEHDR.m_dwPreBufSize = 0;
 	
 	NETCOMM_DEBUG_STR("Enter remotepreview thread...",0);
+	printf("%s nChn(%d) running\n", __func__, nChn);
+
+	#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+		ifly_msgQ_t* pQue = &pNCCtrl->pnetsndMsgQ[nChn];
+	#else
+		ifly_msgQ_t* pQue = (ifly_msgQ_t*)param;
+	#endif
 	
-	ifly_msgQ_t* pQue = (ifly_msgQ_t*)param;
 	
 	printf("$$$$$$$$$$$$$$$$$$RemotePreviewThread id:%d\n",getpid());
 	
@@ -1019,6 +1051,12 @@ void* RemotePreviewThread(void* param)
 		
 		chn = nsheader.byChnIndex;
 		PSNCSSCtrl pVidSndCtrl = &pRmtPrvwCtrl->psVidTcpCtrl[chn];
+
+		if (chn != nChn)
+		{
+			printf("%s chn(%d) != nChn(%d)\n", __func__, chn, nChn);
+			continue;
+		}
 		
 		if(nsheader.eFrameType == EM_VIDEO)
 		{
@@ -1066,7 +1104,7 @@ void* RemotePreviewThread(void* param)
 				#if 1//csp modify 20140315
 					//检查是否I帧和是否需要发送I帧
 					u8 idx = (pLinkCtrl->bSub ? 1 : 0);
-					if(pNCCtrl->pnLostFrame[idx][chn] > 0 && !tVideoFRAMEHDR.m_tVideoParam.m_bKeyFrame)
+					if(pNCCtrl->pnLostFrame[idx][chn] > 0 && !tVideoFRAMEHDR.m_tVideoParam.m_bKeyFrame)// Iframe 3 : Pframe 0
 					{
 						b_lost_all = 0;
 						break;
@@ -1086,6 +1124,8 @@ void* RemotePreviewThread(void* param)
 						pLinkCtrl->m_dwsubFrameId++;
 						tVideoFRAMEHDR.m_dwFrameID = pLinkCtrl->m_dwsubFrameId;
 					}
+
+					//printf("frame send, sock: %d, bsub\n");
     				
     				pthread_mutex_lock(&pLinkCtrl->sockLock);
 					wRet = SendMediaFrameByTcpFast(sFrameBuf, (SOCKHANDLE)pLinkCtrl->sockfd, &tVideoFRAMEHDR, 1);
@@ -1118,6 +1158,7 @@ void* RemotePreviewThread(void* param)
 			
 			//csp modify 20130423
 			//if(b_lost_all && !pVidSndCtrl->bLost)
+			//只有当申请这一路码流的客户端全部发送出错，才关闭
 			if(b_lost_all && !(pVidSndCtrl->bLost & ((0 == nsheader.bSub) ? 0x1 : 0x2)))
 			{
 				//stop preview stream sending
@@ -1140,7 +1181,7 @@ void* RemotePreviewThread(void* param)
 				
 				//csp modify 20130423
 				//pVidSndCtrl->bLost = 1;
-				pVidSndCtrl->bLost |= ((0 == nsheader.bSub) ? 0x1 : 0x2);
+				pVidSndCtrl->bLost |= ((0 == nsheader.bSub) ? 0x1 : 0x2);//bit0: main; bit1 sub
 			}
 		}
 		else if(nsheader.eFrameType==EM_THIRD)//csp modify 20130423

@@ -12,6 +12,9 @@
 extern "C" {
 #endif
 
+//yaogang modify for remote preview thread per chn
+#define REMOTE_PREVIEW_THREAD_PER_CHN
+	
 #define EACH_STREAM_TCP_LINKS 		5
 
 //#define RECV_CMD_ERR_DELAY_US	(10*1000)//csp modify
@@ -58,8 +61,8 @@ do{if (condition) dummy();else netcomm_assert( __FILE__, __LINE__ );}while(0)
 typedef struct _sNetCommSendStreamCtrl
 {
 	int		sockfd;//[EACH_STREAM_TCP_LINKS];
-	u32 	m_dwFrameId;//[EACH_STREAM_TCP_LINKS];
-	u32 	m_dwsubFrameId;//[EACH_STREAM_TCP_LINKS];
+	u32 	m_dwFrameId;//[EACH_STREAM_TCP_LINKS];视频帧计数
+	u32 	m_dwsubFrameId;//[EACH_STREAM_TCP_LINKS];视频帧计数
 	u8 		bSub;//[EACH_STREAM_TCP_LINKS];
 	#ifdef NETSND_OPT
 	BOOL 	bKeyFrame;//[EACH_STREAM_TCP_LINKS];
@@ -70,7 +73,7 @@ typedef struct _sNetCommSendStreamCtrl
 	pthread_mutex_t sockLock;
 	//csp modify 20130423
 	u32		VMonitorInfo;
-	u32 	m_dwThirdFrameId;//[EACH_STREAM_TCP_LINKS];
+	u32 	m_dwThirdFrameId;//[EACH_STREAM_TCP_LINKS];视频帧计数
 	//csp modify 20140318
 	u8		streamtype;
 } SNCSSCtrl1Link, *PSNCSSCtrl1Link;
@@ -115,8 +118,12 @@ typedef struct _sNetCommCtrl
 	u16 			nChnTcpStreamNum;// = pCfg->nSubStreamMax;
 	u16 			nVidStreamNum;// = pCfg->TCPMaxConn;
 	u16 			nTotalLinkNum;// = pCfg->nAllLinkMax;
-	
+
+#ifdef REMOTE_PREVIEW_THREAD_PER_CHN
+	ifly_msgQ_t 	*pnetsndMsgQ;		// stream buff queue per chn
+#else
 	ifly_msgQ_t 	netsndMsgQ;		// stream buff queue
+#endif	
 	ifly_msgQ_t 	netsndMbMsgQ;	// stream buff queue
 	ifly_msgQ_t 	netsndAudioMsgQ;// stream buff queue	//csp modify
 	
