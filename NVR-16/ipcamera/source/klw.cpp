@@ -29,6 +29,10 @@
 #define INVALID_DEVHDL	(unsigned int)(-1)
 #define INVALID_CHNHDL	(unsigned int)(-1)
 
+#define SUBSTREAM_BUFSIZE (300*1024)
+#define MAINSTREAM_BUFSIZE (800*1024)
+
+
 typedef struct
 {
 	unsigned int u32DevHandle;
@@ -39,6 +43,8 @@ typedef struct
 	int nMDEvent;
 	unsigned int nIPCEstAlarm;
 	unsigned int nIPCCover;
+	unsigned char *pframe_buf;//用于组合I帧，pps sps sei 
+	unsigned int buf_used;
 	//SNAP_CALLBACK Snap_CB;
 	//确保抓图回调完成
 	pthread_mutex_t LockSnapOver;
@@ -61,6 +67,8 @@ static unsigned int g_klw_client_count = 0;//32: 0-31
 static unsigned char g_init_flag = 0;
 
 static unsigned char g_sdk_inited = 0;
+
+const unsigned char frame_head[4] = {0x00,0x00,0x00,0x01};
 /*
 static unsigned int ipc_ext_alarm = 0;
 static unsigned int ipc_cover_alarm = 0;
@@ -478,257 +486,161 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
                      VVV_STREAM_INFO_S *pStreamInfo,/*码流属性*/
                      void* pUserData)         /* 用户数据*/
 {
-	int i;
-	struct timeval tv1, tv2;
-	static unsigned int max_interval = 0;
-	unsigned int yg_interval = 0;
-	static unsigned int cnt = 0;
-	
-	for(i=0; i<(int)g_klw_client_count; i++)
+	int chn = (int)pUserData;
+	unsigned int frame_buf_size = MAINSTREAM_BUFSIZE;
+	real_stream_s stream;
+
+	//printf("%s chn%d\n", __func__, (int)pUserData);
+	//struct timeval tv1, tv2;
+	//static unsigned int max_interval = 0;
+	//unsigned int yg_interval = 0;
+	//static unsigned int cnt = 0;
+	if (chn < 0 || chn >= (int)(g_klw_client_count))
 	{
-		int chn = i;
-		if(g_klwc_info[chn].u32ChnHandle == u32ChnHandle)
+		printf("%s u32ChnHandle not found\n", __func__);
+		
+		return -1;
+	}	
+
+	pthread_mutex_lock(&g_klwc_info[chn].lock);
+
+	if(g_klwc_info[chn].u32ChnHandle != u32ChnHandle)
+	{
+		printf("%s chn%d u32ChnHandle err\n", __func__, chn);
+		
+		goto fail;
+	}
+
+	if (NULL == g_klwc_info[chn].pStreamCB)
+	{
+		printf("%s chn%d pStreamCB == NULL\n", __func__, chn);
+		
+		goto fail;
+	}
+
+	if (NULL == g_klwc_info[chn].pframe_buf)
+	{
+		printf("%s chn%d pframe_buf == NULL\n", __func__, chn);
+		
+		goto fail;
+	}
+
+	memset(&stream, 0, sizeof(stream));
+	
+	if(u32DataType == VVV_STREAM_TYPE_VIDEO && pStreamInfo->struVencChAttr.enVedioFormat == VVV_VIDEO_FORMAT_H264)
+	{
+		if(chn < (int)(g_klw_client_count/2))
 		{
-			if(g_klwc_info[chn].pStreamCB != NULL)
+			frame_buf_size = MAINSTREAM_BUFSIZE;
+		}
+		else
+		{
+			frame_buf_size = SUBSTREAM_BUFSIZE;
+		}
+
+		if(memcmp(pu8Buffer, frame_head, 4) != 0)
+		{
+			printf("%s chn%d frame header err\n", __func__, chn);
+
+			goto fail;
+		}
+
+		if (g_klwc_info[chn].buf_used + u32Length > frame_buf_size)
+		{
+			printf("%s chn%d buf_used(%d) + u32Length(%d) > frame_buf_size(%d)\n",
+				__func__, chn, g_klwc_info[chn].buf_used, u32Length, frame_buf_size);
+
+			goto fail;
+		}
+#if 0
+		if (chn == 0)
+		{
+			printf("%s chn%d buf_used(%d), u32Length(%d), frame_buf_size(%d), pu8Buffer[4]: 0x%x\n",
+				__func__, chn, g_klwc_info[chn].buf_used, u32Length, frame_buf_size, pu8Buffer[4]);
+		}
+#endif		
+		memcpy(g_klwc_info[chn].pframe_buf + g_klwc_info[chn].buf_used, pu8Buffer, u32Length);
+		g_klwc_info[chn].buf_used += u32Length;
+
+		if(g_klwc_info[chn].nMDEvent > 0)
+		{
+			stream.mdevent = 1;
+			g_klwc_info[chn].nMDEvent--;			
+		}
+		else
+		{
+			stream.mdevent = 0;
+			if(g_klwc_info[chn].nMDEvent < 0)
 			{
-				if(u32DataType == VVV_STREAM_TYPE_VIDEO && pStreamInfo->struVencChAttr.enVedioFormat == VVV_VIDEO_FORMAT_H264)
-				{
-					real_stream_s stream;
-					//memset(&stream, 0, sizeof(stream));
-					
-					unsigned int t;
-
-					#if 0
-					if (chn == 0)
-					{
-						if (u32Length > 5)
-						{
-							printf("\t IpcPts: %llu, LocalPts: %u,length: %d, 0x%x 0x%x 0x%x 0x%x 0x%x\n",	\
-								u64TimeStamp,	\
-								getTimeStamp(),	\
-								u32Length,	\
-								pu8Buffer[0], pu8Buffer[1], pu8Buffer[2], pu8Buffer[3], pu8Buffer[4]);
-						}
-					}
-
-					//if ( (pu8Buffer[4] == 0x61) && test_min_len > u32Length )
-							//test_min_len = u32Length;
-					
-					#endif
-					/*
-					//if (chn < 16)
-					if (chn > 15)
-					{
-						t = getTimeStamp(); //ms
-						printf("%s IpcPts: %llu, LocalPts: %u, u32Length: %d\n", __func__, u64TimeStamp, t, u32Length);
-					}
-					*/
-					#if 0
-					if (chn == 0)
-					{
-						switch (test_status)
-						{
-							case 0:
-							{
-								ptest_data = (char *)malloc(TestFileLen);
-								if (NULL == ptest_data)
-								{
-									exit(1);
-								}
-
-								pf_test = fopen("/mnt/aaa.h264", "w");
-								if (NULL == pf_test)
-								{
-									perror("pf_test: ");
-									exit(1);
-								}
-
-								printf("pf_test init ok\n");
-								test_data_len = 0;
-								test_status++;
-							}
-							case 1:
-							{
-								if ((test_data_len + u32Length) < TestFileLen)
-								{
-									memcpy(ptest_data+test_data_len, pu8Buffer, u32Length);
-									test_data_len += u32Length;
-								}
-								else
-								{
-									test_status++;
-								}
-							} break;
-							case 2:
-							{
-								if (fwrite(ptest_data, 1, test_data_len, pf_test) != test_data_len)
-								{
-									perror("fwrite: ");
-									exit(1);
-								}
-								fclose(pf_test);
-								printf("pf_test write over, len: %d\n", test_data_len);
-								test_status++;
-							} break;
-							case 3:
-							{
-								
-							} break;
-							default:
-							{
-								//printf("pf_test test_status: %d, invalid\n", test_status);
-							}
-						}
-					}
-					
-					#endif
-					
-					stream.chn = chn;
-					stream.data = (unsigned char *)pu8Buffer;
-					stream.len = u32Length;
-					stream.pts = u64TimeStamp;
-					stream.pts *= 1000;
-					stream.media_type = MEDIA_PT_H264;
-					if((pu8Buffer[4]&0x1F) == 0x07)
-					{
-						stream.frame_type = REAL_FRAME_TYPE_I;
-					}
-					else
-					{
-						stream.frame_type = REAL_FRAME_TYPE_P;
-					}
-					stream.rsv = 0;
-					/*
-					if (chn == 0)
-					{
-						printf("pts: %lld, len: %u, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", \
-							stream.pts, stream.len, pu8Buffer[0], pu8Buffer[1], pu8Buffer[2], pu8Buffer[3], pu8Buffer[4]);
-					}
-					*/
-					if(g_klwc_info[chn].nMDEvent > 0)
-					{
-						//printf("chn%d klw has md event\n",chn);
-						stream.mdevent = 1;
-						unsigned char head[4] = {0x00,0x00,0x00,0x01};
-						if(memcmp(pu8Buffer, head, 4) == 0)
-						{
-							g_klwc_info[chn].nMDEvent--;
-						}
-						else
-						{
-							printf("klw no first packet\n");
-						}
-					}
-					else
-					{
-						//printf("chn%d klw no md event\n",chn);
-						stream.mdevent = 0;
-						if(g_klwc_info[chn].nMDEvent < 0)
-						{
-							g_klwc_info[chn].nMDEvent = 0;
-						}
-					}
-					
-					stream.width = pStreamInfo->struVencChAttr.u32PicWidth;
-					stream.height = pStreamInfo->struVencChAttr.u32PicHeight;
-					
-					#if 0
-					if (chn == 0)
-					{
-						gettimeofday(&tv1, NULL);
-						//printf("\t1 tv.tv_sec: %u, tv.tv_usec: %u\n", tv.tv_sec, tv.tv_usec);
-					}
-					#endif
-					
-					g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
-
-					#if 0
-					if (chn == 0)
-					{
-						gettimeofday(&tv2, NULL);
-						//printf("\t2 tv.tv_sec: %u, tv.tv_usec: %u\n", tv.tv_sec, tv.tv_usec);
-						if (tv2.tv_sec != tv1.tv_sec)
-						{
-							yg_interval = 1000000+tv2.tv_usec - tv1.tv_usec;
-						}
-						else
-						{
-							yg_interval = tv2.tv_usec - tv1.tv_usec;
-						}
-
-						if (yg_interval > max_interval)
-							max_interval = yg_interval;
-						
-						if (cnt++ > 25)
-						{
-							cnt = 0;
-							//printf("\t max_interval: %u\n", max_interval);
-							//printf("\t max_interval: %u, test_min_len: %u\n", max_interval, test_min_len);
-						}
-					}
-					#endif
-					
-				}
-				//yaogang modify for yuetian audio
-				if ((u32DataType == VVV_STREAM_TYPE_AUDIO) )//&& (chn < g_klw_client_count/2))
-				{	
-					//IPC音频开关main_audio_sw
-					//printf("yg get audio package chn:%d\n", chn);
-					
-					ipc_unit ipcam;
-					if(IPC_Get(chn, &ipcam))
-					{
-						return -1;
-					}
-					//printf("yg klw main_audio_sw: %d\n", ipcam.main_audio_sw);
-					/*
-					if (ipcam.main_audio_sw == 0)
-					{
-						return 0;
-					}
-					*/
-					real_stream_s stream;
-					memset(&stream, 0, sizeof(stream));
-					stream.chn = chn;
-					stream.data = (unsigned char *)pu8Buffer + 4;
-					stream.len = u32Length - 4;
-					stream.pts = u64TimeStamp;
-					stream.pts *= 1000;
-					/*
-					printf("yg chn%d u32Length: %d,AudioFormat: %d, SampleRate: %d, BitWidth: %d, ChannMode: %d\n", \
-						chn, u32Length, \
-						pStreamInfo->struAencChAttr.enAudioFormat, \
-						pStreamInfo->struAencChAttr.enSampleRate, \
-						pStreamInfo->struAencChAttr.enBitWidth, \
-						pStreamInfo->struAencChAttr.enChannMode);
-					*/
-					switch (pStreamInfo->struAencChAttr.enAudioFormat)
-					{
-						case VVV_AUDIO_FORMAT_G711A :
-						{
-							stream.media_type = MEDIA_PT_G711;
-						} break;
-						case VVV_AUDIO_FORMAT_G711Mu :
-						{
-							stream.media_type = MEDIA_PT_PCMU;
-						} break;
-						case VVV_AUDIO_FORMAT_G726 :
-						{
-							stream.media_type = MEDIA_PT_G726;
-						} break;
-						default :
-							printf("chn%d Unknow Audio ENC Format.\n", chn);
-							return 0;
-					}
-					
-					g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
-					
-				}
+				g_klwc_info[chn].nMDEvent = 0;
 			}
 		}
+
+		if ((pu8Buffer[4]&0x1F) == 0x5)
+		{
+			stream.frame_type = REAL_FRAME_TYPE_I;
+		}
+		else if ((pu8Buffer[4]&0x1F) == 0x1)
+		{
+			stream.frame_type = REAL_FRAME_TYPE_P;
+		}
+
+		if (stream.frame_type) //确定了帧类型，回调
+		{
+			stream.chn = chn;
+			stream.data = g_klwc_info[chn].pframe_buf;
+			stream.len = g_klwc_info[chn].buf_used;
+			stream.pts = u64TimeStamp;
+			stream.pts *= 1000;
+			stream.media_type = MEDIA_PT_H264;
+			stream.width = pStreamInfo->struVencChAttr.u32PicWidth;
+			stream.height = pStreamInfo->struVencChAttr.u32PicHeight;
+
+			g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
+			g_klwc_info[chn].buf_used = 0;
+		}
 	}
+	else if ((u32DataType == VVV_STREAM_TYPE_AUDIO) )//&& (chn < g_klw_client_count/2))
+	{		
+		stream.chn = chn;
+		stream.data = (unsigned char *)pu8Buffer + 4;
+		stream.len = u32Length - 4;
+		stream.pts = u64TimeStamp;
+		stream.pts *= 1000;
+		
+		switch (pStreamInfo->struAencChAttr.enAudioFormat)
+		{
+			case VVV_AUDIO_FORMAT_G711A :
+			{
+				stream.media_type = MEDIA_PT_G711;
+			} break;
+			case VVV_AUDIO_FORMAT_G711Mu :
+			{
+				stream.media_type = MEDIA_PT_PCMU;
+			} break;
+			case VVV_AUDIO_FORMAT_G726 :
+			{
+				stream.media_type = MEDIA_PT_G726;
+			} break;
+			default :
+				printf("chn%d Unknow Audio ENC Format.\n", chn);
+				goto fail;
+		}
+		
+		g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
+	}
+
+	pthread_mutex_unlock(&g_klwc_info[chn].lock);
 	return 0;
-}
+	
+fail:
+	g_klwc_info[chn].buf_used = 0;
+	pthread_mutex_unlock(&g_klwc_info[chn].lock);
+	
+	return -1;
+}	
+	
+
 /* //demo
 int VVV_SRDK_SAMPLE_AENC(unsigned int u32DevHandle)//ok
 {
@@ -867,10 +779,28 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 	}
 	
 	unsigned int u32StreamFlag = 0;//主、次码流
+	unsigned int frame_buf_size = MAINSTREAM_BUFSIZE;
 	if(chn >= (int)(g_klw_client_count/2))
 	{
 		u32StreamFlag = 1;
+		frame_buf_size = SUBSTREAM_BUFSIZE;
 	}
+
+	if (NULL != g_klwc_info[chn].pframe_buf)
+	{
+		printf("%s chn%d pframe_buf != NULL\n", __func__, chn);
+
+		goto fail1;
+	}
+
+	g_klwc_info[chn].pframe_buf = (unsigned char *)malloc(frame_buf_size);
+	if (NULL == g_klwc_info[chn].pframe_buf)
+	{
+		printf("%s chn%d malloc frame buf failed\n", __func__, chn);
+		
+		goto fail1;
+	}
+	g_klwc_info[chn].buf_used = 0;
 	
 	g_klwc_info[chn].nLost = 0;
 	
@@ -880,7 +810,7 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 	{
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_TYPE_VIDEO, u32StreamFlag, &StreamInfo, KLW_DataCB, /*OnAlarmFunc*/NULL, (void *)chn);
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, /*OnAlarmFunc*/NULL, (void *)chn);
-		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, /*OnAlarmFunc*/NULL, (void *)chn, 300*1024);
+		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_TYPE_VIDEO, u32StreamFlag, &StreamInfo, KLW_DataCB, /*OnAlarmFunc*/NULL, (void *)chn, SUBSTREAM_BUFSIZE);
 		//VVV_STREAM_ALL
 	}
 	else
@@ -892,23 +822,13 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_VIDEO_AUDIO, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
 		//启动告警
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
-		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, 800*1024);
+		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, MAINSTREAM_BUFSIZE);
 	}
 	if(ret != VVV_SUCCESS)
 	{
-		printf("%s chn%d VVV_NET_StartStream failed\n", __func__, chn);
-		g_klwc_info[chn].u32ChnHandle = INVALID_CHNHDL;
+		printf("%s chn%d VVV_NET_StartStream failed\n", __func__, chn);		
 		
-		if(g_klwc_info[chn].u32DevHandle != INVALID_DEVHDL)
-		{
-			VVV_NET_Logout(g_klwc_info[chn].u32DevHandle);
-			g_klwc_info[chn].u32DevHandle = INVALID_DEVHDL;
-		}
-		//printf("%s unlock1 chn%d\n", __func__, chn);
-		pthread_mutex_unlock(&g_klwc_info[chn].lock);
-		//printf("%s unlock2 chn%d\n", __func__, chn);
-		
-		return -1;
+		goto fail2;
 	}
 	g_klwc_info[chn].pStreamCB = pCB;
 	g_klwc_info[chn].dwContext = dwContext;
@@ -920,6 +840,25 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 
 	printf("%s chn%d success\n", __func__, chn);
 	return 0;
+	
+fail2:
+	g_klwc_info[chn].u32ChnHandle = INVALID_CHNHDL;
+	if (g_klwc_info[chn].pframe_buf)
+	{
+		free(g_klwc_info[chn].pframe_buf);
+		g_klwc_info[chn].pframe_buf = NULL;
+	}
+
+fail1:
+	if (g_klwc_info[chn].u32DevHandle != INVALID_DEVHDL)
+	{
+		VVV_NET_Logout(g_klwc_info[chn].u32DevHandle);
+		g_klwc_info[chn].u32DevHandle = INVALID_DEVHDL;
+	}
+
+	pthread_mutex_unlock(&g_klwc_info[chn].lock);
+	
+	return -1;
 }
 
 int KLW_Startbyurl(int chn, RealStreamCB pCB, unsigned int dwContext, char* rtspURL, char *user, char *pwd, unsigned char rtsp_over_tcp)
@@ -931,7 +870,7 @@ int KLW_Startbyurl(int chn, RealStreamCB pCB, unsigned int dwContext, char* rtsp
 
 int KLW_Stop(int chn)
 {
-	int ret;
+	//int ret;
 	
 	if(!g_init_flag)
 	{
@@ -991,6 +930,14 @@ int KLW_Stop(int chn)
 		VVV_NET_Logout(g_klwc_info[chn].u32DevHandle);
 		g_klwc_info[chn].u32DevHandle = INVALID_DEVHDL;
 	}
+	
+	if (g_klwc_info[chn].pframe_buf)
+	{
+		free(g_klwc_info[chn].pframe_buf);
+		g_klwc_info[chn].pframe_buf = NULL;
+	}
+	g_klwc_info[chn].buf_used = 0;
+	
 	//printf("%s unlock1 chn%d\n", __func__, chn);	
 	pthread_mutex_unlock(&g_klwc_info[chn].lock);
 	//printf("%s unlock2 chn%d\n", __func__, chn);

@@ -3119,6 +3119,15 @@ int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 	}
 	
 	//printf("###chn%d real video data...\n", stream->chn);
+	#if 0 //display frame header
+		if (stream->chn == 0 || stream->chn == 16)
+		{			
+			printf("%s chn: %d, len: %d, 0x%x 0x%x 0x%x 0x%x 0x%x\n",
+				__func__, stream->chn, stream->len,
+				stream->data[0], stream->data[1], stream->data[2], stream->data[3], stream->data[4]);
+		
+		}
+	#endif
 	
 	#if 1
 	int channel = stream->chn;

@@ -110,6 +110,8 @@ static unsigned char g_sdk_inited = 0;
 static int alive_Interval = 0;
 const char Iframe[] = {0, 0, 0x01, 0xfc};
 const char Pframe[] = {0, 0, 0x01, 0xfd};
+const char Aframe[] = {0, 0, 0x01, 0xfa};//音频帧
+
 
 //static char *pbuf = NULL;//公用buffer
 
@@ -1418,6 +1420,7 @@ static void* Thread_keep_alive(void* pParam)
 	1、一帧数据分多个包
 	2、I帧和P帧并没有分开，在一个包中可能包含I帧(结束部分)和P帧(起始部分)；
 	3、一个包中也可能包含几个P帧
+	4、雄迈协议已经将sps pps sei 组合I帧
 */
 void* Thread_capture(void* pParam)
 {
@@ -1430,8 +1433,10 @@ void* Thread_capture(void* pParam)
 	Session_info_t *psession = NULL;
 	ctrl_head_t *pchead = NULL;//(ctrl_head_t *)pbuf;
 	char *pdata = NULL;//pbuf + sizeof(ctrl_head_t);
-	real_frame_type_e frame_type = REAL_FRAME_TYPE_NONE;
+	//real_frame_type_e frame_type = REAL_FRAME_TYPE_NONE;
+	unsigned int discern_frame_type = 0;//识别帧类型。0 未识别帧；1 视频I帧；2 视频P帧；3 音频帧
 	unsigned int frame_len = 0;	//一帧数据长度
+	unsigned short frame_len_s = 0;//音频帧头中长度占两字节
 	unsigned int frame_pos = 0;	//一帧中已经收到的数据长度
 	unsigned int b_ignore_one_frame = 0;//当帧长度> enc_len 时，忽略
 
@@ -1528,7 +1533,7 @@ void* Thread_capture(void* pParam)
 		}
 
 		#if 1
-		if (chn == 16)
+		if (chn == 0)
 		{
 			dbg("recv pkg: SessionID: %u, Message_Id: %u, SEQUENCE_NUMBER: %u, CurPacket(%u/%u), Data_Length: %u\n",
 				pchead->SessionID, pchead->Message_Id, pchead->SEQUENCE_NUMBER, pchead->CurPacket, pchead->Total_Packet, pchead->Data_Length);
@@ -1549,31 +1554,59 @@ void* Thread_capture(void* pParam)
 		while (pkg_pos < pchead->Data_Length)	//包中所有数据都处理完成
 		{
 			#if 1
-			if (chn == 16)
+			if (chn == 0)
 			{
 				dbg("frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
-					frame_type, frame_pos, frame_len,
+					discern_frame_type, frame_pos, frame_len,
 					pkg_pos, pchead->Data_Length);
 			}
 			#endif
 
-			if (frame_type == REAL_FRAME_TYPE_NONE)	//还未识别帧类型
+			if (discern_frame_type == 0)	//还未识别帧类型
 			{
 				frame_len = 0;
 				frame_pos = 0;
+				b_ignore_one_frame = 0;
 				
 				if (memcmp(Iframe, pdata+pkg_pos, 4) == 0)
 				{
-					frame_type = REAL_FRAME_TYPE_I;
+					discern_frame_type = 1;
 					memcpy(&frame_len, pdata+pkg_pos+12, 4);//实际帧大小，不包括pchead和I/P帧头部
 					
 					pkg_pos += 16;	//I帧头长
+
+					stream.media_type = MEDIA_PT_H264;
+					stream.frame_type = REAL_FRAME_TYPE_I;
 				}
 				else if (memcmp(Pframe, pdata+pkg_pos, 4) == 0)
 				{
-					frame_type = REAL_FRAME_TYPE_P;
+					discern_frame_type = 2;
 					memcpy(&frame_len, pdata+pkg_pos+4, 4);
 
+					pkg_pos += 8;	//P帧头长
+
+					stream.media_type = MEDIA_PT_H264;
+					stream.frame_type = REAL_FRAME_TYPE_P;
+				}
+				else if (memcmp(Aframe, pdata+pkg_pos, 4) == 0)
+				{
+					discern_frame_type = 3;
+					if (pdata[pkg_pos+4] == 0xe)
+					{
+						stream.media_type = MEDIA_PT_G711;
+					}
+					else
+					{
+						err("unknow audio format, header: %02x %02x %02x %02x %02x\n", 
+						*(pdata+pkg_pos), *(pdata+pkg_pos+1), *(pdata+pkg_pos+2), *(pdata+pkg_pos+3), *(pdata+pkg_pos+4));
+
+						flag_err = 1;
+						break;
+					}
+					
+					memcpy(&frame_len_s, pdata+pkg_pos+6, 2);//byte[6-7]
+					frame_len = frame_len_s;
+					
 					pkg_pos += 8;	//P帧头长
 				}
 				else
@@ -1587,7 +1620,7 @@ void* Thread_capture(void* pParam)
 
 				gettimeofday(&tm, NULL);
 				stream.pts = (unsigned long long)1000000*tm.tv_sec + tm.tv_usec;//tm.tv_usec;//csp modify
-				stream.frame_type = frame_type;
+				//stream.frame_type = frame_type;
 				stream.data = (unsigned char *)pbuf1;
 				stream.len = frame_len;
 
@@ -1595,8 +1628,8 @@ void* Thread_capture(void* pParam)
 				{
 					if (frame_len > (1<<20))
 					{
-						err("chn%d %s len(%u) > 1M bytes\n", chn, 
-							frame_type == REAL_FRAME_TYPE_I? "Iframe":"Pframe",
+						err("chn%d frame_type: %d, len(%u) > 1M bytes\n", chn, 
+							discern_frame_type,
 							frame_len);
 						
 						flag_err = 1;
@@ -1605,18 +1638,20 @@ void* Thread_capture(void* pParam)
 					
 					b_ignore_one_frame = 1;
 					
-					warning("chn%d %s len(%u) > bufsize(%u)\n", chn, 
-						frame_type == REAL_FRAME_TYPE_I? "Iframe":"Pframe",
+					warning("chn%d frame_type: %d, len(%u) > bufsize(%u)\n", chn, 
+						discern_frame_type,
 						frame_len, enc_len);
 				}
 				
 				#if 1
-				if (chn == 16)
+				if (chn == 0)
 				{
-					dbg("chn%d %s-stream get %s, size: %d, time: %ds-%03ldus\n",
-						chn, chn < g_xm_client_count/2? "Main":"Extra1",
-						frame_type == REAL_FRAME_TYPE_I? "Iframe":"Pframe", frame_len,
-						(int)tm.tv_sec, tm.tv_usec/1000);
+					dbg("chn%d frame_type: %d, size: %d, time: %ds-%03ldus\n",
+						chn, 
+						discern_frame_type,
+						frame_len,
+						(int)tm.tv_sec, 
+						tm.tv_usec/1000);
 				}
 				#endif
 			}
@@ -1633,10 +1668,10 @@ void* Thread_capture(void* pParam)
 				pkg_pos = pchead->Data_Length;
 
 				#if 1
-				if (chn == 16)
+				if (chn == 0)
 				{
 					dbg("1 frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
-						frame_type, frame_pos, frame_len,
+						discern_frame_type, frame_pos, frame_len,
 						pkg_pos, pchead->Data_Length);
 				}
 				#endif
@@ -1646,27 +1681,25 @@ void* Thread_capture(void* pParam)
 				if (!b_ignore_one_frame)
 				{
 					memcpy(pbuf1+frame_pos, pdata+pkg_pos, frame_len-frame_pos);
-					b_ignore_one_frame = 0;
 					
 					//回调帧数据
 					psession->pStreamCB(&stream, psession->dwContext);
-				}
+				}				
 				
 				pkg_pos += frame_len-frame_pos;
 				frame_pos = frame_len;				
 
 				#if 1
-				if (chn == 16)
+				if (chn == 0)
 				{
 					dbg("2 frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
-						frame_type, frame_pos, frame_len,
+						discern_frame_type, frame_pos, frame_len,
 						pkg_pos, pchead->Data_Length);
 				}
 				#endif
 
 				//重置
-				frame_type = REAL_FRAME_TYPE_NONE;
-				
+				discern_frame_type = 0;
 			}
 		}
 
