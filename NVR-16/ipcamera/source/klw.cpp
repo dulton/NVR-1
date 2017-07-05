@@ -29,10 +29,6 @@
 #define INVALID_DEVHDL	(unsigned int)(-1)
 #define INVALID_CHNHDL	(unsigned int)(-1)
 
-#define SUBSTREAM_BUFSIZE (300*1024)
-#define MAINSTREAM_BUFSIZE (800*1024)
-
-
 typedef struct
 {
 	unsigned int u32DevHandle;
@@ -529,11 +525,8 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 	
 	if(u32DataType == VVV_STREAM_TYPE_VIDEO && pStreamInfo->struVencChAttr.enVedioFormat == VVV_VIDEO_FORMAT_H264)
 	{
-		if(chn < (int)(g_klw_client_count/2))
-		{
-			frame_buf_size = MAINSTREAM_BUFSIZE;
-		}
-		else
+		frame_buf_size = MAINSTREAM_BUFSIZE;
+		if(chn >= (int)(g_klw_client_count/2))
 		{
 			frame_buf_size = SUBSTREAM_BUFSIZE;
 		}
@@ -552,7 +545,7 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 
 			goto fail;
 		}
-#if 0
+#if 1
 		if (chn == 0)
 		{
 			printf("%s chn%d buf_used(%d), u32Length(%d), frame_buf_size(%d), pu8Buffer[4]: 0x%x\n",

@@ -3128,6 +3128,25 @@ int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 		
 		}
 	#endif
+
+	#if 1 //display max frame size
+		static unsigned int max_frame_size = 0;
+		static unsigned int display_cnt = 0;
+
+		if (max_frame_size < stream->len)
+			max_frame_size = stream->len;
+		
+		if (stream->chn == 0 && stream->frame_type == REAL_FRAME_TYPE_I)
+		{	
+			if (++display_cnt > 30)
+			{
+				display_cnt = 0;
+				
+				printf("%s max_frame_size: %u\n",
+					__func__, max_frame_size);
+			}
+		}
+	#endif
 	
 	#if 1
 	int channel = stream->chn;

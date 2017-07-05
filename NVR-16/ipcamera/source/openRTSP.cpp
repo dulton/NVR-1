@@ -23,6 +23,8 @@ typedef struct
 	ourRTSPClient *rtspClient;
 	TaskScheduler* scheduler;
 	UsageEnvironment* env;
+	unsigned char *pframe_buf;//用于组合I帧，pps sps sei 
+	unsigned int buf_used;
 	pthread_mutex_t lock;
 }rtsp_client_info;
 
@@ -602,6 +604,13 @@ int Callback(void* pContext, uint32_t dwMsg, uint32_t dwParam1, uint32_t dwParam
 		g_rtspc_info[chn].rtspClient = NULL;
 		g_rtspc_info[chn].flagState = FLAG_FREE;
 		g_rtspc_info[chn].dwRTSPFlag = 0;
+
+		if (g_rtspc_info[chn].pframe_buf)
+		{
+			free(g_rtspc_info[chn].pframe_buf);
+			g_rtspc_info[chn].pframe_buf = NULL;
+		}
+		g_rtspc_info[chn].buf_used = 0;
 	}
 	
 	//printf("Callback-3\n");
@@ -896,12 +905,11 @@ void DummySink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 		if(pStreamCB != NULL && strcasecmp(fSubsession.mediumName(), "video") == 0 && strcasecmp(fSubsession.codecName(), "H264") == 0)
 		{
 			real_stream_s stream;
-			//memset(&stream, 0, sizeof(stream));
-			stream.chn = chn;
+			memset(&stream, 0, sizeof(stream));
+			
+		#if 0			
 			stream.data = fReceiveBuffer - 4;
 			stream.len = frameSize + 4;
-			stream.pts = (unsigned long long)1000000*presentationTime.tv_sec + presentationTime.tv_usec;
-			stream.media_type = MEDIA_PT_H264;
 		#if 0
 			
 			if (stream.chn == 0 && stream.len > 5)
@@ -931,6 +939,75 @@ void DummySink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 				//	printf("chn%d frame type:P\n",chn);
 				//}
 			}
+			
+		#else
+			unsigned char *pframe_data = fReceiveBuffer - 4;
+			unsigned int frame_len = frameSize + 4;
+			unsigned int frame_buf_size = MAINSTREAM_BUFSIZE;
+			if(chn >= (int)(g_rtsp_client_count/2))
+			{
+				frame_buf_size = SUBSTREAM_BUFSIZE;
+			}
+			
+			if (NULL == g_rtspc_info[chn].pframe_buf)
+			{
+				stream.data = pframe_data;
+				stream.len = frame_len;
+
+				if((fReceiveBuffer[0] & 0x1f) == 0x07)
+				{
+					stream.frame_type = REAL_FRAME_TYPE_I;
+				}
+				else
+				{
+					stream.frame_type = REAL_FRAME_TYPE_P;
+				}
+			}
+			else
+			{
+				if (g_rtspc_info[chn].buf_used + frame_len > frame_buf_size)
+				{
+					printf("%s chn%d buf_used(%d) + frame_len(%d) > frame_buf_size(%d)\n",
+						__func__, chn, g_rtspc_info[chn].buf_used, frame_len, frame_buf_size);
+
+					g_rtspc_info[chn].buf_used = 0;
+
+					goto next;
+				}
+
+				#if 0
+					if (chn == 0)
+					{
+						printf("%s chn%d buf_used(%d), frame_len(%d), frame_buf_size(%d), fReceiveBuffer[0]: 0x%x\n",
+							__func__, chn, g_rtspc_info[chn].buf_used, frame_len, frame_buf_size, fReceiveBuffer[0]);
+					}
+				#endif
+
+				memcpy(g_rtspc_info[chn].pframe_buf + g_rtspc_info[chn].buf_used, pframe_data, frame_len);
+				g_rtspc_info[chn].buf_used += frame_len;
+
+				if ((fReceiveBuffer[0]&0x1F) == 0x5)
+				{
+					stream.frame_type = REAL_FRAME_TYPE_I;
+				}
+				else if ((fReceiveBuffer[0]&0x1F) == 0x1)
+				{
+					stream.frame_type = REAL_FRAME_TYPE_P;
+				}
+				else //pps sps sei
+				{
+					goto next;
+				}
+
+				stream.data = g_rtspc_info[chn].pframe_buf;
+				stream.len = g_rtspc_info[chn].buf_used;
+				g_rtspc_info[chn].buf_used = 0;
+			}
+		#endif
+
+			stream.chn = chn;
+			stream.pts = (unsigned long long)1000000*presentationTime.tv_sec + presentationTime.tv_usec;
+			stream.media_type = MEDIA_PT_H264;
 			stream.rsv = m_num_ref_frames;
 			stream.mdevent = 0;
 			int w = 0;
@@ -1035,7 +1112,7 @@ void DummySink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 	}
 
 	 
-	
+next:	
 	// Then continue, to request the next frame of data:
 	continuePlaying();
 }
@@ -1496,6 +1573,8 @@ int RTSPC_Init(unsigned int max_client_num)
 		g_rtspc_info[i].rtspClient = NULL;
 		g_rtspc_info[i].scheduler = NULL;
 		g_rtspc_info[i].env = NULL;
+		g_rtspc_info[i].pframe_buf = NULL;
+		g_rtspc_info[i].buf_used = 0;
 	}
 	for(i = 0; i < (int)g_rtsp_client_count; i++)
 	{
@@ -1590,6 +1669,7 @@ int RTSPC_Startbyurl(int chn, RealStreamCB pCB, unsigned int dwContext, char* rt
 					(unsigned int)pCB, (unsigned int)p->pStreamCB, 
 					dwContext, p->dwStreamContext, 
 					rtsp_over_tcp, p->stream_over_tcp);
+			
 			pthread_mutex_unlock(&g_rtspc_info[chn].lock);
 			RTSPC_Stop(chn);
 			pthread_mutex_lock(&g_rtspc_info[chn].lock);
@@ -1637,6 +1717,14 @@ int RTSPC_Startbyurl(int chn, RealStreamCB pCB, unsigned int dwContext, char* rt
 	g_rtspc_info[chn].rtspClient = p;
 	g_rtspc_info[chn].flagState = FLAG_RUN;
 	g_rtspc_info[chn].dwRTSPFlag = 0;
+
+	unsigned int frame_buf_size = MAINSTREAM_BUFSIZE;
+	if(chn >= (int)(g_rtsp_client_count/2))
+	{
+		frame_buf_size = SUBSTREAM_BUFSIZE;
+	}
+	g_rtspc_info[chn].pframe_buf = (unsigned char *)malloc(frame_buf_size);
+	g_rtspc_info[chn].buf_used = 0;
 	
 	pthread_mutex_unlock(&g_rtspc_info[chn].lock);
 	
@@ -1681,6 +1769,14 @@ int RTSPC_Stop(int chn)
 	{
 		//printf("chn%d RTSPC_Stop - not opened\n", chn);
 		g_rtspc_info[chn].flagState = FLAG_FREE;
+		
+		if (g_rtspc_info[chn].pframe_buf)
+		{
+			free(g_rtspc_info[chn].pframe_buf);
+			g_rtspc_info[chn].pframe_buf = NULL;
+		}
+		g_rtspc_info[chn].buf_used = 0;
+		
 		pthread_mutex_unlock(&g_rtspc_info[chn].lock);
 		return 0;
 	}
@@ -1694,6 +1790,13 @@ int RTSPC_Stop(int chn)
 	{
 		usleep(1);
 	}
+
+	if (g_rtspc_info[chn].pframe_buf)
+	{
+		free(g_rtspc_info[chn].pframe_buf);
+		g_rtspc_info[chn].pframe_buf = NULL;
+	}
+	g_rtspc_info[chn].buf_used = 0;
 	
 	pthread_mutex_unlock(&g_rtspc_info[chn].lock);
 	
