@@ -506,7 +506,7 @@ void *videoConnFxn(void *arg)
 								
 								//if (channel == 16)
 									//printf("videoConnFxn chn%d IPC_Start-1, tv1:%u.%u\n", channel, tv1.tv_sec, tv1.tv_usec);
-								//if (channel < 16)
+								//if (channel >= 16)
 									IPC_Start(channel);
 								//gettimeofday(&tv1,NULL);
 
@@ -955,32 +955,22 @@ int IPC_GetLinkStatus(int chn)
 
 int DoStreamStateCallBack(int chn, real_stream_state_e msg)
 {
-	ipc_unit  ipcam;
-	int main_chn = chn<g_chn_count ? chn : (chn-g_chn_count);
+	//ipc_unit  ipcam;
+	//int main_chn = chn<g_chn_count ? chn : (chn-g_chn_count);
+	if(chn < 0 || chn >= (int)(g_chn_count*2))
+	{
+		printf("%s chn%d out of range\n", __func__, chn);
+		return -1;
+	}
 	
 	if(g_pStateCB != NULL)
 	{
 		if(msg == REAL_STREAM_STATE_STOP || msg == REAL_STREAM_STATE_LOST)
 		{
-			if(chn < (int)(g_chn_count*2))
-			{
-				g_stream_info[chn].video_width = 0;
-				g_stream_info[chn].video_height = 0;
-			}
-			#if 0
-			//yaogang modify 20141012
-			if (IPC_Get(main_chn, &ipcam) == 0)
-			{
- 				if (ipcam.protocol_type == PRO_TYPE_KLW)
-				{
-					printf("yg StateCB klw Stop chn%d\n", chn);
-					//IPC_Stop(chn);
-					//IPC_Stop(chn+16);
-					//IPC_Stop(main_chn);
-					//IPC_Stop(main_chn+g_chn_count);
-				}
-			}
-			#endif
+			g_stream_info[chn].video_width = 0;
+			g_stream_info[chn].video_height = 0;
+			
+			
 		}
 		
 		(g_pStateCB)(chn, msg);
@@ -1045,14 +1035,14 @@ int DoRealStreamCallBack(real_stream_s *stream, unsigned int dwContext)
 {
 	if(stream == NULL || stream->chn != (int)dwContext)
 	{
-		printf("DoRealStreamCallBack: param error-1\n");
+		printf("%s: param error-1\n", __func__);
 		return -1;
 	}
 	
 	int chn = stream->chn;
 	if(chn < 0 || chn >= (int)(g_chn_count*2))
 	{
-		printf("DoRealStreamCallBack: param error-2\n");
+		printf("%s chn%d out of range\n", __func__, chn);
 		return -1;
 	}
 	

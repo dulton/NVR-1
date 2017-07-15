@@ -73,6 +73,7 @@ typedef struct
 typedef struct
 {
 	unsigned int	SessionID;
+	int chn;
 	int main_sock;
 	int stream_sock;
 	//int stream_type;
@@ -273,7 +274,7 @@ static int recv_timeout(int sock, char *pbuf, int size)
 	while(remian > 0)
 	{
 		struTimeout.tv_sec = 0;//500ms
-		struTimeout.tv_usec = 100*1000;
+		struTimeout.tv_usec = 500*1000;
 		
 		FD_ZERO(&struReadSet);
 		FD_SET(sock, &struReadSet);
@@ -281,12 +282,12 @@ static int recv_timeout(int sock, char *pbuf, int size)
 		ret = select(sock + 1, &struReadSet, NULL, NULL, &struTimeout);
 		if (ret < 0)
 		{
-			err("select failed");
+			err("select failed\n");
 			return FAILURE;
 		}
 		else if (ret == 0)
 		{
-			if (++timeout_cnt > 30)//总时长timeout_cnt * struTimeout
+			if (++timeout_cnt > 4)//总时长timeout_cnt * struTimeout
 			{
 				dbg("%s timeout-2\n", __func__);
 				return FAILURE;
@@ -298,14 +299,14 @@ static int recv_timeout(int sock, char *pbuf, int size)
 		ret = recv(sock, pbuf+recvlen, remian,0);
 		if(ret < 0)
 		{
-			err("recv failed");
+			err("recv failed\n");
 			return FAILURE;
 		}
 		else if (ret == 0)
 		{
-			if(err_cnt++ >= 400)
+			//if(err_cnt++ >= 400)
 			{
-				err("recv 0 byte");
+				err("recv 0 byte\n");
 				return FAILURE;
 			}
 		}
@@ -332,7 +333,7 @@ static int cmd_session(int sock, char *pbuf, int size)
 	ret = loopsend(sock, pbuf, size);
 	if (ret != size)
 	{
-		err("loopsend failed");
+		err("loopsend failed\n");
 		return FAILURE;
 	}
 	
@@ -341,7 +342,7 @@ static int cmd_session(int sock, char *pbuf, int size)
 	if (ret != int(sizeof(ctrl_head_t)))
 	{
 		//dbg("recv head err\n");
-		err("recv head err");
+		err("recv head err\n");
 		return FAILURE;
 	}
 #if 0
@@ -398,7 +399,7 @@ int XM_Init(unsigned int max_client_num)
 	g_xmcam_info = (xm_camera_info_t *)malloc(g_xm_client_count / 2 * sizeof(xm_camera_info_t));
 	if (g_xmcam_info == NULL)
 	{
-		err("malloc g_xmcam_info failed");
+		err("malloc g_xmcam_info failed\n");
 		return FAILURE;
 	}
 	memset(g_xmcam_info, 0, g_xm_client_count / 2 * sizeof(xm_camera_info_t));//csp modify 20150421
@@ -420,7 +421,7 @@ int XM_Init(unsigned int max_client_num)
 	pbuf = (char *)malloc(COMMON_BUF_SIZE);
 	if (NULL == pbuf)
 	{
-		err("malloc common buf failed");
+		err("malloc common buf failed\n");
 		return FAILURE;
 	}
 	*/
@@ -450,7 +451,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock < 0)
 	{
-		err("socket error");
+		err("socket error\n");
 		return FAILURE;
 	}
 	dbg("%s -- create socket ok fd: %d\n", __func__, sock);
@@ -460,7 +461,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
     ret = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&opt, sizeof(opt));  
     if(ret == FAILURE)  
     {
-		err("set socket broadcast error");
+		err("set socket broadcast error\n");
 		close(sock);//csp modify
 		return FAILURE;
     }
@@ -475,7 +476,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
     ret = bind(sock,(struct sockaddr *)&(addrto), sizeof(struct sockaddr_in));
     if (ret < 0)
     {
-		err("bind error");
+		err("bind error\n");
 		close(sock);//csp modify
 		return FAILURE; 
     }
@@ -492,7 +493,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
     ret = sendto(sock, pchead, sizeof(ctrl_head_t), 0, (struct sockaddr*)&addrto, sizeof(struct sockaddr_in));  
     if(ret < 0)  
     {  
-		err("IPSEARCH_REQ sendto error");
+		err("IPSEARCH_REQ sendto error\n");
 		close(sock);//csp modify
 		return FAILURE;
     }
@@ -539,7 +540,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 			ret = recvfrom(sock, buf, BUF_SIZE, 0, (struct sockaddr*)&from, &len);  
 			if(ret <= 0)
 			{
-				err("broadcast recvfrom error");
+				err("broadcast recvfrom error\n");
 				close(sock);//csp modify
 				return FAILURE;
 			}
@@ -568,7 +569,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 				ipc_node *pNode = (ipc_node *)malloc(sizeof(ipc_node));
 				if(pNode == NULL)
 				{
-					err("Not enough space to save new ipc info");
+					err("Not enough space to save new ipc info\n");
 					close(sock);//csp modify
 					return count;//return -1;
 				}
@@ -579,7 +580,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 				ptmp = strstr(pmsg,"HostIP");
 			    if (NULL == ptmp)
 			    {
-			    	err("strstr HostIP err");
+			    	err("strstr HostIP err\n");
 					close(sock);//csp modify
 			    	return FAILURE;
 			    }
@@ -589,7 +590,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 			    ptmp = strstr(pmsg,"GateWay");
 			    if (NULL == ptmp)
 			    {
-			    	err("strstr GateWay err");
+			    	err("strstr GateWay err\n");
 					close(sock);//csp modify
 			    	return FAILURE;
 			    }
@@ -599,7 +600,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 			    ptmp = strstr(pmsg,"Submask");
 			    if (NULL == ptmp)
 			    {
-			    	err("strstr Submask err");
+			    	err("strstr Submask err\n");
 					close(sock);//csp modify
 			    	return FAILURE;
 			    }
@@ -609,7 +610,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 			    ptmp = strstr(pmsg, "TCPPort");
 			    if (NULL == ptmp)
 			    {
-			    	err("strstr TCPPort err");
+			    	err("strstr TCPPort err\n");
 					close(sock);//csp modify
 			    	return FAILURE;
 			    }
@@ -619,7 +620,7 @@ int XM_Search(ipc_node** head, ipc_node **tail, unsigned char check_conflict)
 			    ptmp = strstr(pmsg, "MAC");
 			    if (NULL == ptmp)
 			    {
-			    	err("strstr MAC err");
+			    	err("strstr MAC err\n");
 					close(sock);//csp modify
 			    	return FAILURE;
 			    }
@@ -724,7 +725,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
     ret = loopsend(main_sock, buf, sizeof(ctrl_head_t)+pchead->Data_Length);
     if(ret != (int)(sizeof(ctrl_head_t)+pchead->Data_Length))
 	{
-		err("send_data err");
+		err("send_data err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -734,7 +735,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
 	ret = recv_timeout(main_sock, buf, sizeof(ctrl_head_t));
 	if (ret != int(sizeof(ctrl_head_t)))
 	{
-		err("recv login respond head err");
+		err("recv login respond head err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -751,7 +752,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
 	ret = recv_timeout(main_sock, pmsg, pchead->Data_Length);
 	if (ret != int(pchead->Data_Length))
 	{
-		err("recv login respond data err");
+		err("recv login respond data err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -765,7 +766,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
 	    p = strstr(buf+sizeof(ctrl_head_t), "AliveInterval");
 	    if (NULL == p)
 	    {
-	    	err("strstr AliveInterval err");
+	    	err("strstr AliveInterval err\n");
 			close(main_sock);//csp modify
 	    	return FAILURE;
 	    }
@@ -793,7 +794,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
     p = strstr(buf+sizeof(ctrl_head_t), "SessionID");
     if (NULL == p)
     {
-    	err("strstr SessionID err");
+    	err("strstr SessionID err\n");
 		close(main_sock);//csp modify
     	return FAILURE;
     }
@@ -842,7 +843,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
 	ret = recv_timeout(main_sock, pmsg, pchead->Data_Length);
 	if (ret != int(pchead->Data_Length))
 	{
-		err("recv SYSINFO_REQ respond msg err");
+		err("recv SYSINFO_REQ respond msg err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -889,7 +890,7 @@ static int xm_login(int chn, unsigned int dwIp, unsigned short wPort, char *user
 	ret = recv_timeout(main_sock, pmsg, pchead->Data_Length);
 	if (ret != int(pchead->Data_Length))
 	{
-		err("recv SYSINFO_REQ respond data err");
+		err("recv SYSINFO_REQ respond data err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -1198,7 +1199,7 @@ static int xm_capture_start(int chn)
 		if (ret != int(sizeof(ctrl_head_t)))
 		{
 			pthread_mutex_unlock(&psession->lock);
-			err("recv MONITOR_REQ respond head err");
+			err("recv MONITOR_REQ respond head err\n");
 			return FAILURE;
 		}
 		dbg("Head_Flag: 0x%x\n", pchead->Head_Flag);
@@ -1214,7 +1215,7 @@ static int xm_capture_start(int chn)
 		if (ret != int(pchead->Data_Length))
 		{
 			pthread_mutex_unlock(&psession->lock);
-			err("recv MONITOR_REQ respond data err");
+			err("recv MONITOR_REQ respond data err\n");
 			return FAILURE;
 		}
 		dbg("MONITOR_REQ respon data: %s\n", pmsg);
@@ -1319,7 +1320,7 @@ static void* Thread_keep_alive(void* pParam)
 	ret = pthread_detach(pthread_self());
 	if(ret < 0)
 	{
-		err("pthread_detach");
+		err("pthread_detach\n");
 		pthread_exit((void *)0);
 	}
 	else
@@ -1424,13 +1425,14 @@ static void* Thread_keep_alive(void* pParam)
 */
 void* Thread_capture(void* pParam)
 {
-	int chn = 0;
+	Session_info_t *psession = (Session_info_t *)pParam;
+	int chn = psession->chn;
 	
 	int ret = 0;
 	char *pbuf = NULL;
 	char *pbuf1 = NULL;
 	unsigned int enc_len = 0;
-	Session_info_t *psession = NULL;
+	
 	ctrl_head_t *pchead = NULL;//(ctrl_head_t *)pbuf;
 	char *pdata = NULL;//pbuf + sizeof(ctrl_head_t);
 	//real_frame_type_e frame_type = REAL_FRAME_TYPE_NONE;
@@ -1442,21 +1444,23 @@ void* Thread_capture(void* pParam)
 
 	//一包数据中当前处理位置，(后面)已经处理的数据，(前面)待处理的数据
 	unsigned int pkg_pos = 0;
+	unsigned int pkg_len = 0;
 	int flag_err = 0;	//出错后置1
 	struct timeval tm;
-	
-	
-	chn = (int)pParam;
-	if(chn >= g_xm_client_count)
-	{
-		dbg("%s param error\n", __func__);
-		goto ProcQuit;
-	}
-	
-	psession = get_session(chn);
+	unsigned long long frame_pts_us = 0;//收到Iframe 时重新赋值
+
+	//frame cnt
+	int frame_cnt = 0;
+
 	if(NULL == psession)
 	{
 		dbg("%s get_session failed\n", __func__);
+		goto ProcQuit;
+	}
+	
+	if(chn >= g_xm_client_count)
+	{
+		dbg("%s param error\n", __func__);
 		goto ProcQuit;
 	}
 	
@@ -1493,10 +1497,7 @@ void* Thread_capture(void* pParam)
 	real_stream_s stream;
 	memset(&stream, 0, sizeof(stream));
 	stream.chn = chn;
-	//stream.data = (unsigned char *)recv_buf;
-	//stream.len = packet_len;
-	//stream.pts = timestamp;
-	//stream.pts *= 1000;//微秒
+	stream.data = (unsigned char *)pbuf1;	
 	stream.rsv = 0;
 	stream.mdevent = 0;
 	stream.width = psession->dwStreamWidth;
@@ -1504,6 +1505,7 @@ void* Thread_capture(void* pParam)
 	stream.media_type = MEDIA_PT_H264;
 
 	pchead = (ctrl_head_t *)pbuf;
+	pdata = pbuf + sizeof(ctrl_head_t);
 	
 	while (g_init_flag)
 	{
@@ -1522,43 +1524,48 @@ void* Thread_capture(void* pParam)
 		ret = recv_timeout(psession->stream_sock, (char *)pchead, sizeof(ctrl_head_t));
 		if (ret != int(sizeof(ctrl_head_t)))
 		{
-			dbg("error: chn%d - recv head\n", chn);
+			err("error: chn%d - recv head\n", chn);
+
+			flag_err = 1;
 			break;
 		}
 
 		if(pchead->Data_Length > 16 * 1024)//文档说一包数据不会超过16K
 		{
-			dbg("error: chn%d pkg_len(%u) > 16 * 1024\n", chn, pchead->Data_Length);
+			err("error: chn%d pkg_len(%u) > 16 * 1024\n", chn, pchead->Data_Length);
+
+			flag_err = 1;
 			break;
 		}
 
-		#if 1
-		if (chn == 0)
+		#if 0
+		if (chn == 16)
 		{
 			dbg("recv pkg: SessionID: %u, Message_Id: %u, SEQUENCE_NUMBER: %u, CurPacket(%u/%u), Data_Length: %u\n",
 				pchead->SessionID, pchead->Message_Id, pchead->SEQUENCE_NUMBER, pchead->CurPacket, pchead->Total_Packet, pchead->Data_Length);
 		}
 		#endif
-		
-		ret = recv_timeout(psession->stream_sock, pbuf+sizeof(ctrl_head_t), pchead->Data_Length);
+
+		ret = recv_timeout(psession->stream_sock, pdata, pchead->Data_Length);
 		if (ret != int(pchead->Data_Length))
 		{
 			dbg("error: chn%d recv data\n", chn);
+
+			flag_err = 1;
 			break;
 		}
-
-		pdata = pbuf + sizeof(ctrl_head_t);
+		
 		pkg_pos = 0;
-
+		pkg_len = pchead->Data_Length;
 		//处理数据
-		while (pkg_pos < pchead->Data_Length)	//包中所有数据都处理完成
+		while (pkg_pos < pkg_len)	//包中所有数据都处理完成
 		{
-			#if 1
-			if (chn == 0)
+			#if 0
+			if (chn == 16)
 			{
 				dbg("frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
 					discern_frame_type, frame_pos, frame_len,
-					pkg_pos, pchead->Data_Length);
+					pkg_pos, pkg_len);
 			}
 			#endif
 
@@ -1572,21 +1579,24 @@ void* Thread_capture(void* pParam)
 				{
 					discern_frame_type = 1;
 					memcpy(&frame_len, pdata+pkg_pos+12, 4);//实际帧大小，不包括pchead和I/P帧头部
+					pkg_pos += 16;	//I帧头长					
 					
-					pkg_pos += 16;	//I帧头长
-
 					stream.media_type = MEDIA_PT_H264;
 					stream.frame_type = REAL_FRAME_TYPE_I;
+
+					gettimeofday(&tm, NULL);
+					frame_pts_us = (unsigned long long)1000000*tm.tv_sec + tm.tv_usec;//tm.tv_usec;//csp modify
+					frame_cnt = 0;
 				}
 				else if (memcmp(Pframe, pdata+pkg_pos, 4) == 0)
 				{
 					discern_frame_type = 2;
 					memcpy(&frame_len, pdata+pkg_pos+4, 4);
-
 					pkg_pos += 8;	//P帧头长
 
 					stream.media_type = MEDIA_PT_H264;
 					stream.frame_type = REAL_FRAME_TYPE_P;
+					frame_cnt++;
 				}
 				else if (memcmp(Aframe, pdata+pkg_pos, 4) == 0)
 				{
@@ -1607,7 +1617,7 @@ void* Thread_capture(void* pParam)
 					memcpy(&frame_len_s, pdata+pkg_pos+6, 2);//byte[6-7]
 					frame_len = frame_len_s;
 					
-					pkg_pos += 8;	//P帧头长
+					pkg_pos += 8;	//音频帧头长
 				}
 				else
 				{
@@ -1618,11 +1628,10 @@ void* Thread_capture(void* pParam)
 					break;
 				}
 
-				gettimeofday(&tm, NULL);
-				stream.pts = (unsigned long long)1000000*tm.tv_sec + tm.tv_usec;//tm.tv_usec;//csp modify
-				//stream.frame_type = frame_type;
-				stream.data = (unsigned char *)pbuf1;
 				stream.len = frame_len;
+				stream.pts = frame_pts_us;
+				
+				frame_pts_us += 40*1000;
 
 				if (frame_len > enc_len)
 				{
@@ -1643,36 +1652,32 @@ void* Thread_capture(void* pParam)
 						frame_len, enc_len);
 				}
 				
-				#if 1
-				if (chn == 0)
+				#if 0
+				if (chn == 16)
 				{
-					dbg("chn%d frame_type: %d, size: %d, time: %ds-%03ldus\n",
-						chn, 
-						discern_frame_type,
-						frame_len,
-						(int)tm.tv_sec, 
-						tm.tv_usec/1000);
+					dbg("chn%d recv one frame, type: %d, len: %d, time: %llu, frame_cnt: %d\n",
+ 						chn, discern_frame_type, frame_len, stream.pts/1000, frame_cnt);
 				}
 				#endif
 			}
 
 			//当前包内有效数据不够填充该帧
-			if (pchead->Data_Length-pkg_pos < frame_len-frame_pos)
+			if (pkg_len - pkg_pos < frame_len - frame_pos)
 			{
 				if (!b_ignore_one_frame)
 				{
-					memcpy(pbuf1+frame_pos, pdata+pkg_pos, pchead->Data_Length-pkg_pos);
+					memcpy(pbuf1+frame_pos, pdata+pkg_pos, pkg_len-pkg_pos);
 				}
 				
-				frame_pos += pchead->Data_Length-pkg_pos;
-				pkg_pos = pchead->Data_Length;
+				frame_pos += pkg_len-pkg_pos;
+				pkg_pos = pkg_len;
 
-				#if 1
-				if (chn == 0)
+				#if 0
+				if (chn == 16)
 				{
 					dbg("1 frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
 						discern_frame_type, frame_pos, frame_len,
-						pkg_pos, pchead->Data_Length);
+						pkg_pos, pkg_len);
 				}
 				#endif
 			}
@@ -1687,14 +1692,14 @@ void* Thread_capture(void* pParam)
 				}				
 				
 				pkg_pos += frame_len-frame_pos;
-				frame_pos = frame_len;				
+				frame_pos = frame_len;
 
-				#if 1
-				if (chn == 0)
+				#if 0
+				if (chn == 16)
 				{
-					dbg("2 frame_type: %d, frame_pos: %u, frame_len: %u, process_data_len: %u, Data_Length: %u\n",
-						discern_frame_type, frame_pos, frame_len,
-						pkg_pos, pchead->Data_Length);
+					dbg("2 frame_type: %d, frame_cnt: %d, process_data_len: %u, Data_Length: %u\n",
+						discern_frame_type, frame_cnt,
+						pkg_pos, pkg_len);
 				}
 				#endif
 
@@ -1706,6 +1711,13 @@ void* Thread_capture(void* pParam)
 		if (flag_err)
 			break;		
 	}
+
+	pthread_mutex_lock(&psession->lock);
+	if(psession->eventLoopWatchVariable)	
+	{
+		flag_err = 0;
+	}
+	pthread_mutex_unlock(&psession->lock);
 	
 	if(pbuf1 != NULL)
 	{
@@ -1721,7 +1733,8 @@ Procbuf:
 	}
 	
 ProcOver:
-	DoStreamStateCallBack(chn, REAL_STREAM_STATE_LOST);
+	if (flag_err)
+		DoStreamStateCallBack(chn, REAL_STREAM_STATE_LOST);
 	
 ProcQuit:
 	
@@ -2075,6 +2088,7 @@ int XM_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInfo
 		return FAILURE;
 	}
 	
+	psession->chn = chn;
 	if(!g_sdk_inited)
 	{
 		if(pthread_create(&keep_alive_pid, NULL, Thread_keep_alive, NULL) < 0)
@@ -2109,7 +2123,7 @@ int XM_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInfo
 	psession->pStreamCB = pCB;
 	psession->dwContext = dwContext;
 
-	ret = pthread_create(&psession->capture_tid, NULL, Thread_capture, (void *)chn);
+	ret = pthread_create(&psession->capture_tid, NULL, Thread_capture, (void *)psession);
 	if (ret != 0)
 	{
 		pthread_mutex_unlock(&psession->lock);
@@ -2182,26 +2196,32 @@ int XM_Stop(int chn)//
 		return SUCCESS;
 	}
 
+	pthread_mutex_unlock(&psession->lock);
+
 	xm_capture_stop(chn);
 
 	if (psession->capture_tid != -1)
 	{
 		dbg("chn%d stop thread\n", chn);
 		psession->eventLoopWatchVariable = 1;
-		pthread_mutex_unlock(&psession->lock);
+		//pthread_mutex_unlock(&psession->lock);
 
 		pthread_join(psession->capture_tid, NULL);
 		dbg("chn%d stop thread success\n", chn);
-		pthread_mutex_lock(&psession->lock);
+		//pthread_mutex_lock(&psession->lock);
 	}
+
+	//登出
+	xm_logout(chn);
+
+	pthread_mutex_lock(&psession->lock);
 	
 	if (psession->stream_sock != -1)
 	{
 		close(psession->stream_sock);
 		psession->stream_sock = -1;
 	}
-//登出
-	xm_logout(chn);
+
 	if (psession->main_sock!= -1)
 	{
 		close(psession->main_sock);
@@ -2368,7 +2388,7 @@ int XM_SetNetworkParam(ipc_unit *ipcam, ipc_neteork_para_t *pnw)
     ret = loopsend(main_sock, buf, sizeof(ctrl_head_t)+pchead->Data_Length);
     if(ret != (int)(sizeof(ctrl_head_t)+pchead->Data_Length))
 	{
-		err("send_data err");
+		err("send_data err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -2378,7 +2398,7 @@ int XM_SetNetworkParam(ipc_unit *ipcam, ipc_neteork_para_t *pnw)
 	ret = recv_timeout(main_sock, buf, sizeof(ctrl_head_t));
 	if (ret != int(sizeof(ctrl_head_t)))
 	{
-		err("recv login respond head err");
+		err("recv login respond head err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -2395,7 +2415,7 @@ int XM_SetNetworkParam(ipc_unit *ipcam, ipc_neteork_para_t *pnw)
 	ret = recv_timeout(main_sock, pmsg, pchead->Data_Length);
 	if (ret != int(pchead->Data_Length))
 	{
-		err("recv login respond data err");
+		err("recv login respond data err\n");
 		close(main_sock);//csp modify
 		return FAILURE;
 	}
@@ -2439,7 +2459,7 @@ int XM_SetNetworkParam(ipc_unit *ipcam, ipc_neteork_para_t *pnw)
     p = strstr(buf+sizeof(ctrl_head_t), "SessionID");
     if (NULL == p)
     {
-    	err("strstr SessionID err");
+    	err("strstr SessionID err\n");
 		close(main_sock);//csp modify
     	return FAILURE;
     }

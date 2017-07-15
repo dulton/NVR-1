@@ -579,7 +579,7 @@ HI_S32 SAMPLE_VDEC_CreateVdecChn(HI_S32 s32ChnID, SIZE_S *pstSize, PAYLOAD_TYPE_
 		}
 	}
 			#ifdef HI3535//csp modify 20150110
-	//stPrtclParam.s32DisplayFrameNum = 0;//1;
+				stPrtclParam.s32DisplayFrameNum = 0;//1;
 			#endif
 	//csp modify 20140406
 	//stPrtclParam.s32SCDBufSize = pstSize->u32Height * pstSize->u32Width * 3 / 2;
@@ -718,7 +718,7 @@ int tl_vdec_open(int vdec_chn_num)
 	//csp modify 20140406
 	int max_w = VDEC_MAX_W;
 	int max_h = VDEC_MAX_H;
-#ifdef HI3520D
+#if defined(HI3520D) && !defined(HI3535)
 	if(open_chn_num > 1)
 	{
 		if(max_h > 1088)
@@ -1563,7 +1563,7 @@ int tl_vdec_eletroinc_zoom(int eaFlag, int firstCh, pre_rect_s stCapRect)
 		//csp modify 20140406
 		int max_w = VDEC_MAX_W;
 		int max_h = VDEC_MAX_H;
-	#ifdef HI3520D
+	#if defined(HI3520D) && !defined(HI3535)
 		if(open_chn_num > 1)
 		{
 			if(max_h > 1088)
@@ -1885,7 +1885,7 @@ END_1D1_CLIP_2:
 			//csp modify 20140406
 			int max_w = VDEC_MAX_W;
 			int max_h = VDEC_MAX_H;
-		#ifdef HI3520D
+		#if defined(HI3520D) && !defined(HI3535)
 			if(open_chn_num > 1)
 			{
 				if(max_h > 1088)
@@ -2869,7 +2869,8 @@ int nvr_preview_vdec_write(int chn, vdec_stream_s *pin_stream)
 						chn = real_chn;
 
 						#ifdef HI3535
-							s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, -1);//HI3535 SDK API修改
+							//s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, -1);//HI3535 SDK API修改
+							s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, 0);//-1);//HI3535 SDK API修改
 						#else
 							s32ret = HI_MPI_VDEC_SendStream(chn, &stStream, HI_IO_BLOCK);
 						#endif
@@ -3318,7 +3319,7 @@ int nvr_preview_vdec_write(int chn, vdec_stream_s *pin_stream)
 	#endif
 	
 	#ifdef HI3535
-		s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, -1);//HI3535 SDK API修改
+		s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, 0);//-1);//HI3535 SDK API修改
 	#else
 		s32ret = HI_MPI_VDEC_SendStream(real_chn, &stStream, HI_IO_BLOCK);
 	#endif

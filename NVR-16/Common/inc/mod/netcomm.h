@@ -423,7 +423,7 @@ typedef struct _sNetAdvPara
 	
 } SNetAdvancePara;
 
-#define MAX_ALARM_UPLOAD_NUM 5
+#define MAX_ALARM_UPLOAD_NUM 10
 
 typedef struct
 {

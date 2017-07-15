@@ -2116,7 +2116,7 @@ extern SDevInfo* modsys_GetDiskInfo( u8 nIdx );
 
 //yaogang modify 20170218 in shanghai
 #define MallocFrameBuf
-#define MaxFrameSize (768<<10)
+#define MaxFrameSize (512<<10)
 
 void RecordMainFxn(void* ID)
 {

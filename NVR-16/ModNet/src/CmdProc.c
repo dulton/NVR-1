@@ -346,7 +346,7 @@ u16 DealCommand(
 	int i, k, id, rate, seekPos;
 	//char temp[2] = {0};
 	
-	PNetCommCommandDeal pCB;
+	PNetCommCommandDeal pCB = NULL;
 	
 	SNetCommCtrl* pNetCtrl = &sNetCommCtrl;
 	SNetLog		  sNLIns;
@@ -362,16 +362,19 @@ u16 DealCommand(
 	pCB = cmdProc_GetCmdCB(event);
 	if(NULL == pCB)
 	{
-		NETCOMM_DEBUG_STR("No matched callback function registered!!!\n", -1);
-		
-		//csp modify 20130527
-		if(pAckLen)
+		if (event != CTRL_NOTIFY_CONNLOST)//yaogang modify for server heart beat check
 		{
-			*pAckLen = 0;
+			NETCOMM_DEBUG_STR("No matched callback function registered!!!\n", -1);
+			
+			//csp modify 20130527
+			if(pAckLen)
+			{
+				*pAckLen = 0;
+			}
+			
+			//csp modify 20130527
+			return CTRL_FAILED_COMMAND;//return 0;//
 		}
-		
-		//csp modify 20130527
-		return CTRL_FAILED_COMMAND;//return 0;//
 	}
 	
 	if(cph)
@@ -2315,6 +2318,21 @@ u16 DealCommand(
 		}
 		break;
 #endif
+		case CTRL_NOTIFY_CONNLOST:
+		{
+			struct in_addr in;
+			in.s_addr = cph->ip;
+			
+			for(i=0;i<MAX_ALARM_UPLOAD_NUM;i++)
+			{
+				if(cph == g_AlarmUploadCenter[i].g_cph)
+				{
+					printf("client %s out AlarmUploadCenter\n", inet_ntoa(in));
+					net_write_upload_alarm(0xffff0000+i);//set 0
+					break;
+				}
+			}		
+		} break;
 		case CTRL_CMD_ALARMUPLOADCENTER:
 		{
 			#if 1
@@ -2322,13 +2340,20 @@ u16 DealCommand(
 			u8 tmp = 0;
 			memcpy(&tmp,pbyMsgBuf,sizeof(unsigned char));
 			if(pAckLen) *pAckLen = 0;
+
+			struct in_addr in;
+			in.s_addr = cph->ip;
+			
 			for(i=0;i<MAX_ALARM_UPLOAD_NUM;i++)
 			{
 				if(cph == g_AlarmUploadCenter[i].g_cph)
 				{
 					if (1 == tmp) {
 						return CTRL_SUCCESS;
-					} else {
+					} 
+					else 
+					{
+						printf("client %s out AlarmUploadCenter\n", inet_ntoa(in));
 						net_write_upload_alarm(0xffff0000+i);//set 0
 						return CTRL_SUCCESS;
 					}
@@ -2341,6 +2366,7 @@ u16 DealCommand(
 			{
 				if(NULL == g_AlarmUploadCenter[i].g_cph)
 				{
+					printf("client %s in AlarmUploadCenter\n", inet_ntoa(in));
 					g_AlarmUploadCenter[i].g_cph = cph;
 					net_write_upload_alarm(0xffff0100+i);//set 1
 					break;

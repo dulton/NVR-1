@@ -3100,6 +3100,8 @@ extern int DealRealAudio(real_stream_s *stream, unsigned int dwContext);
 
 int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 {
+	int channel = stream->chn;
+	
 	if(stream == NULL || stream->chn != dwContext)
 	{
 		printf("DealRealStream: param error\n");
@@ -3111,8 +3113,8 @@ int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 	if(stream->media_type != MEDIA_PT_H264)
 	{
 		#ifdef HI3535
-			return DealRealAudio(stream, dwContext);
-			//return 0;
+			//return DealRealAudio(stream, dwContext);
+			return 0;
 		#else
 			return 0;//yg modify 20140913
 		#endif
@@ -3129,27 +3131,53 @@ int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 		}
 	#endif
 
-	#if 1 //display max frame size
-		static unsigned int max_frame_size = 0;
+	#if 0 //display max frame size
+		static unsigned int main_max_frame_size = 0;
+		static unsigned int sub_max_frame_size = 0;
 		static unsigned int display_cnt = 0;
 
-		if (max_frame_size < stream->len)
-			max_frame_size = stream->len;
+		if(channel < ARG_VI_NUM_MAX)//main stream
+		{
+			if (main_max_frame_size < stream->len)
+				main_max_frame_size = stream->len;
+		}
+		else //sub stream
+		{
+			if (sub_max_frame_size < stream->len)
+				sub_max_frame_size = stream->len;
+		}
 		
-		if (stream->chn == 0 && stream->frame_type == REAL_FRAME_TYPE_I)
+		if (channel == 0 && stream->frame_type == REAL_FRAME_TYPE_I)
 		{	
 			if (++display_cnt > 30)
 			{
 				display_cnt = 0;
 				
-				printf("%s max_frame_size: %u\n",
-					__func__, max_frame_size);
+				printf("%s main_max_frame_size: %u, sub_max_frame_size: %u\n",
+					__func__, main_max_frame_size, sub_max_frame_size);
 			}
 		}
 	#endif
+
+	#if 0
+	u32 local_cur_pts;//getTimeStamp(); //ms
+	static u32 local_pre_pts = 0;
+	static u32 frame_pre_pts = 0;
+	if (channel == 16 && stream->frame_type == REAL_FRAME_TYPE_I)
+	{
+		local_cur_pts = getTimeStamp();
+		if (local_pre_pts != 0)
+		{
+			printf("Iframe interval, local: %d, frame: %d\n",
+				local_cur_pts-local_pre_pts, (int)(stream->pts/1000 - frame_pre_pts));
+		}
+		
+		local_pre_pts = local_cur_pts;
+		frame_pre_pts = stream->pts/1000;		
+	}
+	#endif
 	
 	#if 1
-	int channel = stream->chn;
 	
 	/*if(channel == 8 || channel == 24)
 	{

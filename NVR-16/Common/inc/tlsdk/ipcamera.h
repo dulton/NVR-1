@@ -23,8 +23,8 @@ extern "C" {
 #define PRO_TYPE_IPC_TEST	0X200//test record disk error by yaogang 20170222
 #endif
 
-#define SUBSTREAM_BUFSIZE (300*1024)
-#define MAINSTREAM_BUFSIZE (800*1024)
+#define SUBSTREAM_BUFSIZE (200*1024)
+#define MAINSTREAM_BUFSIZE (500*1024)
 
 
 

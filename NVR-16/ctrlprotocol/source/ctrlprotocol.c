@@ -21,6 +21,10 @@ typedef sem_t SemHandle;
 #include <netinet/tcp.h>
 #endif
 
+//yaogang modify for server heart beat check
+#define HEART_BEAT_INTERVAL (1*60) //10min
+
+
 static char g_upnpid[16] = {0};
 
 //csp modify 20130405
@@ -29,6 +33,19 @@ static char g_upnppw[16] = {0};
 //csp modify 20130406
 //#define P2P_SERVER
 BOOL login_p2p_server();
+
+static time_t get_time_sec_monotonic(void)
+{
+	//uint64 val;
+	struct timespec time;
+	
+	clock_gettime(CLOCK_MONOTONIC, &time);
+
+	//val = time.tv_sec;
+	//val = val*1000 + time.tv_nsec/(1000*1000);
+
+	return time.tv_sec;
+} 
 
 //pw 2010/9/10
 int looprecv(SOCKET s, char * buf, unsigned int rcvsize)
@@ -114,6 +131,7 @@ u16 CleanCPHandle(CPHandle cph)
 	cph->conntype = CTRL_CONNECTION_NULL;
 	cph->newmsgcome = 0;
 	cph->nolnkcount = 0;
+	cph->last_msg_time = 0;
 	memset(&cph->guid,0,sizeof(cph->guid));
 	return CTRL_SUCCESS;
 }
@@ -300,6 +318,26 @@ static u16 SetSockLinkOpt(SOCKHANDLE hSock)
 		);
 	}
 #endif
+
+//设置超时2s
+#ifdef WIN32
+		int timeo = 2000;
+#else
+		struct timeval timeo = { 2, 0 };
+#endif
+	ret = setsockopt(hSock, SOL_SOCKET, SO_SNDTIMEO,(void *) &timeo, sizeof(timeo));
+	if(ret < 0)
+	{
+    	printf("ERROR: %s set send timeout failed\n", __func__);
+		return CTRL_FAILED_UNKNOWN;
+	}
+    //set receive timeout
+    ret = setsockopt(hSock,SOL_SOCKET,SO_RCVTIMEO,(void *) &timeo, sizeof(timeo));
+	if(ret < 0)
+	{
+    	printf("ERROR: %s set receive timeout failed\n", __func__);
+		return CTRL_FAILED_UNKNOWN;
+	}
 
 	return CTRL_SUCCESS;
 }
@@ -554,8 +592,11 @@ void SetKeepAlive(SOCKHANDLE hSock) //zlb20111110 bugfix
 CPHandle AddCPLink(SOCKHANDLE hSock,u8 conntype,u32 ip,u16 port,u16 *pwErrorCode)
 {
 	int i;
+	struct in_addr in;
+	
 	for(i=0;i<CTRL_PROTOCOL_MAXLINKNUM;i++)
 	{
+		pthread_mutex_lock(&hCPLink[i].lock);
 		if(hCPLink[i].sockfd == INVALID_SOCKET)
 		{
  			SetKeepAlive(hSock); //zlb20111110 bugfix
@@ -566,11 +607,19 @@ CPHandle AddCPLink(SOCKHANDLE hSock,u8 conntype,u32 ip,u16 port,u16 *pwErrorCode
 			hCPLink[i].port = port;
 			hCPLink[i].newmsgcome = 0;
 			hCPLink[i].nolnkcount = 0;
+			hCPLink[i].last_msg_time = get_time_sec_monotonic();
 			memset(&hCPLink[i].guid,0,sizeof(hCPLink[i].guid));
 
+			in.s_addr = ip;
+			printf("AddCPLink client ip %s, time: %d\n",
+					inet_ntoa(in), (int)hCPLink[i].last_msg_time);
+
+			pthread_mutex_unlock(&hCPLink[i].lock);
+			
 			if(pwErrorCode) *pwErrorCode = CTRL_SUCCESS;
 			return &hCPLink[i];
 		}
+		pthread_mutex_unlock(&hCPLink[i].lock);
 	}
 	if(pwErrorCode) *pwErrorCode = CTRL_FAILED_LINKLIMIT;
 	return NULL;
@@ -662,6 +711,12 @@ void *CPTaskProc(void *pParam)
 	ifly_cp_header_t cpsndhead;
 	ifly_cp_header_t cprcvhead;
 	u16 wRet;
+
+	time_t cur_time_s = 0;//yaogang modify for server heart beat check
+	time_t last_msg_time_s = 0;
+	int sock_fd = INVALID_SOCKET;
+	int sock_fd_max = INVALID_SOCKET;
+	struct in_addr in;
 	
 #ifndef HISI_3515
 	#ifndef WIN32
@@ -679,22 +734,60 @@ void *CPTaskProc(void *pParam)
 #ifndef WIN32
 		pthread_testcancel();
 #endif
-
+		cur_time_s = get_time_sec_monotonic();
 		FD_ZERO(&set);
-		if(hServerSock != INVALID_SOCKET)
-			FD_SET(hServerSock,&set);
 		
-		for(i=0;i<CTRL_PROTOCOL_MAXLINKNUM;i++)
+		if(hServerSock != INVALID_SOCKET)
 		{
-			if(hCPLink[i].sockfd != INVALID_SOCKET)
+			FD_SET(hServerSock, &set);
+			if (sock_fd_max < hServerSock)
 			{
-				FD_SET(hCPLink[i].sockfd,&set);
+				sock_fd_max = hServerSock;
 			}
 		}
 		if(hInterSock != INVALID_SOCKET) 
 		{
-			FD_SET(hInterSock,&set);
+			FD_SET(hInterSock, &set);
+			if (sock_fd_max < hInterSock)
+			{
+				sock_fd_max = hInterSock;
+			}
 		}
+		
+		for(i=0;i<CTRL_PROTOCOL_MAXLINKNUM;i++)
+		{
+			pthread_mutex_lock(&hCPLink[i].lock);
+
+			sock_fd = hCPLink[i].sockfd;
+			last_msg_time_s = hCPLink[i].last_msg_time;
+			in.s_addr = hCPLink[i].ip;
+			
+			pthread_mutex_unlock(&hCPLink[i].lock);
+			
+			if(sock_fd == INVALID_SOCKET)
+			{
+				continue;
+			}
+
+			if (abs(cur_time_s - last_msg_time_s) > HEART_BEAT_INTERVAL+3*60)// 15 min
+			{
+				printf("client %s connect lost\n", inet_ntoa(in));
+				if(pfuncMsgCB != NULL)
+				{
+					//printf("CPTaskProc CTRL_NOTIFY_CONNLOST\n");
+					pfuncMsgCB(&hCPLink[i],CTRL_NOTIFY_CONNLOST,NULL,0,NULL,NULL,pCallBackContext);
+				}
+
+				pthread_mutex_lock(&hCPLink[i].lock);
+				CleanCPHandle(&hCPLink[i]);
+				pthread_mutex_unlock(&hCPLink[i].lock);
+
+				continue;
+			}
+
+			FD_SET(hCPLink[i].sockfd,&set);			
+		}
+		
 		//linux平台下timeout会被修改以表示剩余时间,故每次都要重新赋值
 		timeout.tv_sec = 20;
 		timeout.tv_usec = 0;
@@ -743,18 +836,23 @@ void *CPTaskProc(void *pParam)
 				//printf("recv msg end\n");
 				if(ret<=0)
 				{
-					//printf("recv failed from(0x%08x,%d)\n",hCPLink[i].ip,hCPLink[i].port);
+					in.s_addr = hCPLink[i].ip;
+					printf("%s recv failed, ip: %s\n", __func__, inet_ntoa(in));
 
 					if(pfuncMsgCB != NULL)
 					{
 						pfuncMsgCB(&hCPLink[i],CTRL_NOTIFY_CONNLOST,NULL,0,NULL,NULL,pCallBackContext);
 					}
 
-					//MessageBox(NULL, "CONTINUE 1", NULL,MB_OK);
+					pthread_mutex_lock(&hCPLink[i].lock);
 					CleanCPHandle(&hCPLink[i]);
+					pthread_mutex_unlock(&hCPLink[i].lock);
 					continue;
 				}
+				
 				hCPLink[i].newmsgcome = 1;
+				hCPLink[i].last_msg_time = get_time_sec_monotonic();
+				
 				if(ret >= sizeof(ifly_cp_header_t))
 				{
 					int ret2 = 0;
@@ -824,8 +922,21 @@ void *CPTaskProc(void *pParam)
 						cpsndhead.event		= htons(CTRL_NOTIFY_HEARTBEAT_RESP);
 						cpsndhead.number	= htons(cprcvhead.number);
 						cpsndhead.version	= htons(cprcvhead.version);
-#if 0
-						send(hCPLink[i].sockfd,(char *)&cpsndhead,ntohl(cpsndhead.length),0);
+#if 1
+						if (send(hCPLink[i].sockfd,(char *)&cpsndhead,ntohl(cpsndhead.length),0) < 0)
+						{
+							in.s_addr = hCPLink[i].ip;
+							printf("send heart beat resp failed, ip: %s\n", inet_ntoa(in));
+							
+							if(pfuncMsgCB != NULL)
+							{
+								pfuncMsgCB(&hCPLink[i],CTRL_NOTIFY_CONNLOST,NULL,0,NULL,NULL,pCallBackContext);
+							}
+
+							pthread_mutex_lock(&hCPLink[i].lock);
+							CleanCPHandle(&hCPLink[i]);
+							pthread_mutex_unlock(&hCPLink[i].lock);
+						}
 #endif
 						//MessageBox(NULL, "CONTINUE 4", NULL,MB_OK);
 						continue;
@@ -869,7 +980,20 @@ void *CPTaskProc(void *pParam)
 
 						//printf("send ack msg start, number: %d, event: %d\n", cprcvhead.number, cprcvhead.event);
 						//pw 2010/9/10
-						loopsend(hCPLink[i].sockfd,(char *)g_byAckBuf,ntohl(cpsndhead.length));
+						if (loopsend(hCPLink[i].sockfd,(char *)g_byAckBuf,ntohl(cpsndhead.length)) <= 0)
+						{
+							in.s_addr = hCPLink[i].ip;
+							printf("send cmd ack failed, ip: %s\n", inet_ntoa(in));
+							
+							if(pfuncMsgCB != NULL)
+							{
+								pfuncMsgCB(&hCPLink[i],CTRL_NOTIFY_CONNLOST,NULL,0,NULL,NULL,pCallBackContext);
+							}
+
+							pthread_mutex_lock(&hCPLink[i].lock);
+							CleanCPHandle(&hCPLink[i]);
+							pthread_mutex_unlock(&hCPLink[i].lock);
+						}
 						//printf("send ack msg end, event: %d\n", cprcvhead.event);
 					}
 				}
@@ -1514,6 +1638,7 @@ u16 CPLibInit(u16 wPort)
 	for(i=0;i<CTRL_PROTOCOL_MAXLINKNUM;i++)
 	{
 		hCPLink[i].sockfd = INVALID_SOCKET;
+		pthread_mutex_init(&hCPLink[i].lock, NULL);
 		CleanCPHandle(&hCPLink[i]);
 	}
 

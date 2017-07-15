@@ -404,6 +404,7 @@ void* NetCommInitThxd( void* para )
 		{
 			if(!initMsgQ(&pNCCIns->pnetsndMsgQ[i], msgnum, nFrameSizeMax * 4, 64))//main 1.5M sub 0.5M
 			{
+				printf("%s initMsgQ %d failed\n", __func__, i);
 				NETCOMM_DEBUG_STR("initMsgQ pnetsndMsgQ[%d]", i);
 				errCode = -1;
 				goto NCINIT_ERR;

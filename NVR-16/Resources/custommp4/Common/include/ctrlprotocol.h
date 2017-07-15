@@ -343,6 +343,10 @@ typedef struct
 	u8			conntype;
 	u8          newmsgcome;
 	u8          nolnkcount;
+	u8 reserve;
+	//yaogang modify for server heart beat check
+	pthread_mutex_t lock;
+	time_t last_msg_time;//上次通信时间，命令或心跳回应都可以
 }PACK_NO_PADDING ifly_cp_t,*CPHandle;
 
 

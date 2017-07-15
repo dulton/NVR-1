@@ -3763,6 +3763,8 @@ s32 EncDataDispatch(SBizEncodeData* psBizEncData)
 			*/
 			if (psEncHead->nLen > 500*1024)
 			{
+				printf("Exception: %s chn: %d type: %d, len%d > 500*1024",
+					__func__, nChn, psBizEncData->emChnType, psEncHead->nLen);
 				return 0;
 			}
 			

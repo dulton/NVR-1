@@ -41,17 +41,18 @@ typedef struct
 	unsigned int nIPCCover;
 	unsigned char *pframe_buf;//用于组合I帧，pps sps sei 
 	unsigned int buf_used;
+	//long long frame_pts_us;//收到Iframe 时重新赋值
 	//SNAP_CALLBACK Snap_CB;
 	//确保抓图回调完成
-	pthread_mutex_t LockSnapOver;
-	pthread_cond_t CondSnapOver;
+	//pthread_mutex_t LockSnapOver;
+	//pthread_cond_t CondSnapOver;
 	//bool bFlagSnapBusy;
 	
 	pthread_mutex_t lock;
 }klw_client_info;
 
-volatile SNAP_CALLBACK Snap_CB[32];
-volatile bool bFlagSnapBusy[32];
+//volatile SNAP_CALLBACK Snap_CB[32];
+//volatile bool bFlagSnapBusy[32];
 //二次回调函数是否可以修改，0可以修改，1等待
 
 
@@ -132,11 +133,11 @@ CLOCK_MONOTONIC：Represents monotonic time. Cannot be set. 表示单调时间，
 		pthread_cond_t CondSnapOver;
 		bool bFlagSnapOver;
 		*/
-		pthread_mutex_init(&g_klwc_info[i].LockSnapOver, NULL);//非递归锁
-		pthread_cond_init(&g_klwc_info[i].CondSnapOver, &condattr);//初始化条件变量
+		//pthread_mutex_init(&g_klwc_info[i].LockSnapOver, NULL);//非递归锁
+		//pthread_cond_init(&g_klwc_info[i].CondSnapOver, &condattr);//初始化条件变量
 		//g_klwc_info[i].bFlagSnapBusy = 0;
-		bFlagSnapBusy[i] = 0;
-		Snap_CB[i] = NULL;
+		//bFlagSnapBusy[i] = 0;
+		//Snap_CB[i] = NULL;
 
 		//pthread_mutex_init(&g_klwc_info[i].LockSnapCBChange, NULL);//非递归锁
 		//pthread_cond_init(&g_klwc_info[i].CondSnapCBChange, &condattr);//初始化条件变量
@@ -421,8 +422,36 @@ int OnEvenFunc(unsigned int u32Handle,    /* 句柄 */
                void* pUserData,           /* 用户数据*/
                VVV_STREAM_INFO_S* pStreamInfo)/*码流属性*/
 {
+	int chn = (int)pUserData;
+	
 	printf("OnEvenFunc handle: %d event: %d\n", u32Handle, u32Event);
+	
 	#if 1
+
+		if (chn < 0 || chn >= (int)(g_klw_client_count))
+		{
+			printf("%s chn%d out of range\n", __func__, chn);
+			
+			return -1;
+		}
+
+		pthread_mutex_lock(&g_klwc_info[chn].lock);
+
+		if ((INVALID_CHNHDL == u32Handle) || (u32Handle != g_klwc_info[chn].u32ChnHandle))
+		{
+			printf("%s u32ChnHandle err\n", __func__);
+
+			pthread_mutex_unlock(&g_klwc_info[chn].lock);
+			return -1;
+		}
+		
+		pthread_mutex_unlock(&g_klwc_info[chn].lock);
+		
+		if ((u32Event == NETSTAT_TYPE_CONNING_FAILED) && (u32Event == NETSTAT_TYPE_ABORTIBE_DISCONNED))
+		{
+			DoStreamStateCallBack(chn, REAL_STREAM_STATE_LOST);
+		}
+	#else
 	if ((u32Event != NETSTAT_TYPE_CONNING) && (u32Event != NETSTAT_TYPE_CONNED))
 	{
 		int i;
@@ -448,6 +477,7 @@ int OnEvenFunc(unsigned int u32Handle,    /* 句柄 */
 		}
 	}
 	#endif
+	
 	return 0;
 }
 
@@ -483,6 +513,8 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
                      void* pUserData)         /* 用户数据*/
 {
 	int chn = (int)pUserData;
+	RealStreamCB pStreamCB = NULL;
+	unsigned int dwContext = 0;
 	unsigned int frame_buf_size = MAINSTREAM_BUFSIZE;
 	real_stream_s stream;
 
@@ -498,32 +530,41 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 		return -1;
 	}	
 
-	pthread_mutex_lock(&g_klwc_info[chn].lock);
+	//pthread_mutex_lock(&g_klwc_info[chn].lock);
 
-	if(g_klwc_info[chn].u32ChnHandle != u32ChnHandle)
+	if(u32ChnHandle != g_klwc_info[chn].u32ChnHandle)
 	{
-		printf("%s chn%d u32ChnHandle err\n", __func__, chn);
-		
+		printf("%s chn%d out of range\n", __func__, chn);
+
+		//pthread_mutex_unlock(&g_klwc_info[chn].lock);
 		goto fail;
 	}
 
 	if (NULL == g_klwc_info[chn].pStreamCB)
 	{
 		printf("%s chn%d pStreamCB == NULL\n", __func__, chn);
-		
+
+		//pthread_mutex_unlock(&g_klwc_info[chn].lock);
 		goto fail;
 	}
+
+	pStreamCB = g_klwc_info[chn].pStreamCB;
+	dwContext = g_klwc_info[chn].dwContext;
 
 	if (NULL == g_klwc_info[chn].pframe_buf)
 	{
 		printf("%s chn%d pframe_buf == NULL\n", __func__, chn);
-		
+
+		//pthread_mutex_unlock(&g_klwc_info[chn].lock);
 		goto fail;
 	}
 
+	//pthread_mutex_unlock(&g_klwc_info[chn].lock);
+	
 	memset(&stream, 0, sizeof(stream));
 	
-	if(u32DataType == VVV_STREAM_TYPE_VIDEO && pStreamInfo->struVencChAttr.enVedioFormat == VVV_VIDEO_FORMAT_H264)
+	if(u32DataType == VVV_STREAM_TYPE_VIDEO 
+		&& pStreamInfo->struVencChAttr.enVedioFormat == VVV_VIDEO_FORMAT_H264)
 	{
 		frame_buf_size = MAINSTREAM_BUFSIZE;
 		if(chn >= (int)(g_klw_client_count/2))
@@ -545,7 +586,7 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 
 			goto fail;
 		}
-#if 1
+#if 0
 		if (chn == 0)
 		{
 			printf("%s chn%d buf_used(%d), u32Length(%d), frame_buf_size(%d), pu8Buffer[4]: 0x%x\n",
@@ -572,26 +613,52 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 		if ((pu8Buffer[4]&0x1F) == 0x5)
 		{
 			stream.frame_type = REAL_FRAME_TYPE_I;
+			#if 0
+			struct timeval tm;
+			gettimeofday(&tm, NULL);
+			long long tmp_pts = (long long)1000000*tm.tv_sec + tm.tv_usec;
+
+			if ((0 == g_klwc_info[chn].frame_pts_us)
+				|| (llabs(tmp_pts - g_klwc_info[chn].frame_pts_us) > 900*1000))//500ms
+			{
+				printf("%s chn%d adjust pts %llu to %llu\n", __func__, chn,
+					(unsigned long long)g_klwc_info[chn].frame_pts_us,
+					(unsigned long long)tmp_pts);
+
+				g_klwc_info[chn].frame_pts_us = tmp_pts;
+			}
+			#endif
 		}
 		else if ((pu8Buffer[4]&0x1F) == 0x1)
 		{
 			stream.frame_type = REAL_FRAME_TYPE_P;
 		}
-
-		if (stream.frame_type) //确定了帧类型，回调
+		else //pps sps sei
 		{
-			stream.chn = chn;
-			stream.data = g_klwc_info[chn].pframe_buf;
-			stream.len = g_klwc_info[chn].buf_used;
-			stream.pts = u64TimeStamp;
-			stream.pts *= 1000;
-			stream.media_type = MEDIA_PT_H264;
-			stream.width = pStreamInfo->struVencChAttr.u32PicWidth;
-			stream.height = pStreamInfo->struVencChAttr.u32PicHeight;
-
-			g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
-			g_klwc_info[chn].buf_used = 0;
+			return 0;
 		}
+		
+		stream.chn = chn;
+		stream.data = g_klwc_info[chn].pframe_buf;
+		stream.len = g_klwc_info[chn].buf_used;
+		stream.pts = u64TimeStamp;
+		stream.pts *= 1000;
+		//stream.pts = (unsigned long long)g_klwc_info[chn].frame_pts_us;
+		stream.media_type = MEDIA_PT_H264;
+		stream.width = pStreamInfo->struVencChAttr.u32PicWidth;
+		stream.height = pStreamInfo->struVencChAttr.u32PicHeight;
+
+		//g_klwc_info[chn].frame_pts_us += 40*1000;
+		#if 0
+		if (chn == 16)
+		{
+			printf("chn%d frame type: %d, len: %06d, pts: %llu, local: %u\n",
+				chn, stream.frame_type, stream.len, stream.pts/1000, getTimeStamp());
+		}
+		#endif
+
+		pStreamCB(&stream, dwContext);
+		g_klwc_info[chn].buf_used = 0;
 	}
 	else if ((u32DataType == VVV_STREAM_TYPE_AUDIO) )//&& (chn < g_klw_client_count/2))
 	{		
@@ -620,15 +687,13 @@ int KLW_DataCB(unsigned int u32ChnHandle,/* 通道句柄 */
 				goto fail;
 		}
 		
-		g_klwc_info[chn].pStreamCB(&stream, g_klwc_info[chn].dwContext);
+		pStreamCB(&stream, dwContext);
 	}
 
-	pthread_mutex_unlock(&g_klwc_info[chn].lock);
 	return 0;
 	
 fail:
 	g_klwc_info[chn].buf_used = 0;
-	pthread_mutex_unlock(&g_klwc_info[chn].lock);
 	
 	return -1;
 }	
@@ -757,7 +822,7 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 		stNetProtocol.eSocketType = SOCKET_TYPE_TCP;
 		stNetProtocol.eControlProtocol = CTL_PROTOCOL_TYPE_PRIVATE;
 		//printf("user: %s, pwd: %s, devip: %s, wPort: %d\n", user, pwd, devip, wPort);
-		ret = VVV_NET_Login(&g_klwc_info[chn].u32DevHandle, user, pwd, devip, wPort, stNetProtocol, 5000, OnEvenFunc, &stUserAuth, NULL);
+		ret = VVV_NET_Login(&g_klwc_info[chn].u32DevHandle, user, pwd, devip, wPort, stNetProtocol, 5000, OnEvenFunc, &stUserAuth, (void *)chn);
 		if(ret != VVV_SUCCESS)
 		{
 			printf("%s chn%d VVV_NET_Login failed\n", __func__, chn);
@@ -825,6 +890,8 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 	}
 	g_klwc_info[chn].pStreamCB = pCB;
 	g_klwc_info[chn].dwContext = dwContext;
+
+	//g_klwc_info[chn].frame_pts_us = 0;
 	//printf("%s chn: %d, dwContext: %d\n", __func__, chn, dwContext);
 
 	//printf("%s unlock1 chn%d\n", __func__, chn);
@@ -970,6 +1037,7 @@ int KLW_GetLinkStatus(int chn)
 	return status;
 }
 
+#if 0
 int SnapCallBack(unsigned int u32ChnHandle,/* 通道句柄 */
                                   char *SnapData,         /*抓拍数据指针*/
                                   unsigned int DataSize,  /*抓拍数据长度*/
@@ -1027,7 +1095,7 @@ int SnapCallBack(unsigned int u32ChnHandle,/* 通道句柄 */
 	#endif
 	return 0;
 }
-
+#endif
 //yaogang modify 20141225
 /**********************
 chn: 码流通道0-31，由ipcamera 层IPC通道根据StreamType而来
