@@ -214,6 +214,12 @@ extern "C" {
 #define CTRL_CMD_CLOSE_GUIDE		CTRL_CMD_BASE+175		//跃天解码板CMS remote CTRL
 //yaogang modify 20160122
 #define CTRL_CMD_GET_IPCCHN_LINKSTATUS	CTRL_CMD_BASE+176		//获取IPC通道连接状态(一个IPC有两个通道，主、子码流)
+
+//yaogang modify 20170715 简易设置通道名的接口
+#define CTRL_CMD_GET_CHN_NAME	CTRL_CMD_BASE+177
+#define CTRL_CMD_SET_CHN_NAME	CTRL_CMD_BASE+178
+
+
 typedef struct
 {
 	unsigned char max_chn_num;//最大通道数

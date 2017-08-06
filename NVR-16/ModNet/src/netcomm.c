@@ -106,7 +106,7 @@ static SNetConnStatus 	sNetConnStatus;
 SNetCommCtrl sNetCommCtrl;
 
 #if 1 //luo
-#define AUTYPENUM	 13
+#define AUTYPENUM	 15
 //#define MAX_ALARM_UPLOAD_NUM 5
 
 static int upload_alarm_fd[2] = {-1, -1};
@@ -143,7 +143,9 @@ static pthread_mutex_t upload_alarm_mutex = PTHREAD_MUTEX_INITIALIZER;
 10		//非法访问报警
 11		//IPC外部报警
 12		//485扩展报警
-
+//网络通知client 
+13		//IPC通道被设置
+14		//OSD被设置(通道名可能发生改变)
 */
 
 
@@ -3249,8 +3251,8 @@ void* netComm_AlarmUpload_init(void* para)
 			id = (key >> 8) & 0xff;
 			state = key & 0x01;
 
-			printf("%s : \n""\t type: %d\n""\t id: %d\n""\t state: %d\n", 
-				__func__, type, id, state);
+			//printf("%s : \n""\t type: %d\n""\t id: %d\n""\t state: %d\n", 
+			//	__func__, type, id, state);
 			
 			if (id >= MaxChnNum)
 			{
@@ -3269,15 +3271,15 @@ void* netComm_AlarmUpload_init(void* para)
 			}
 			
 			u8 last_state = (alarmupload[type] >> id) & 0x1;
-			
-			if (last_state == state) 
+			//报警类型(非网络通知client )
+			if ((type < 13) && (last_state == state))
 			{
 				continue;
 			}
 			
 			alarmupload[type] &= ~(1 << id);
 			alarmupload[type] |= state << id;
-			printf("%s alarmupload[%d]: 0x%x\n", __func__, type, alarmupload[type]);
+			//printf("%s alarmupload[%d]: 0x%x\n", __func__, type, alarmupload[type]);
 
 			memset(&m_alarmstate, 0, sizeof(m_alarmstate));
 			m_alarmstate.type = type;
@@ -3288,8 +3290,8 @@ void* netComm_AlarmUpload_init(void* para)
 			{
 				if (g_AlarmUploadCenter[j].g_cph && (g_AlarmUploadCenter[j].g_state == 1))
 				{					
-					printf("%s send, type: %d, id: %d, state: 0x%x\n", \
-						__func__, m_alarmstate.type, m_alarmstate.id, m_alarmstate.state);
+					//printf("%s send, type: %d, id: %d, state: 0x%x\n", 
+					//	__func__, m_alarmstate.type, m_alarmstate.id, m_alarmstate.state);
 					ret = CPPost(g_AlarmUploadCenter[j].g_cph,CTRL_NOTIFY_ALARMINFO,&m_alarmstate,sizeof(m_alarmstate));
 					if (ret != CTRL_SUCCESS)
 					{ 

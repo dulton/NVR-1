@@ -526,7 +526,7 @@ void CPageInputTray::Draw()
 
 void CPageInputTray::OnInputTypeShift()
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 	CItem *pOwner = GetOwner();
 
 	if(!pOwner)
@@ -1058,7 +1058,7 @@ void CPageCharList::OnInputChanged()
 	m_pEditPinyin->GetText(input, 8);
 	printf("%s input: %s\n", __func__, input);
 	m_nChars = m_IMM.Filter(input);
-	printf("%s m_nChars: %d\n", __func__, m_nChars);
+	//printf("%s m_nChars: %d\n", __func__, m_nChars);
 	GenCandidateList();
 }
 
@@ -1087,7 +1087,7 @@ void CPageCharList::GenCandidateList()
 			if (WordExist(buf))
 			{
 				m_pStaticList[realCnt++]->SetText(buf);
-				printf("buf: %s, 0x%2x 0x%2x 0x%2x\n", buf, buf[0], buf[1], buf[2]);
+				//printf("buf: %s, 0x%2x 0x%2x 0x%2x\n", buf, buf[0], buf[1], buf[2]);
 			}
 			else
 			{

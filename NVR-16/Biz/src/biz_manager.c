@@ -2538,7 +2538,7 @@ s32 DoBizSetPara(SBizPara* psBizPara)
 		case EM_BIZ_VO_IMAGEPARA:
 			return ConfigSetPlayBackImagePara((SBizPreviewImagePara *)psBizPara->pData, psBizPara->sBizParaTarget.nChn);
 		case EM_BIZ_STROSD:
-			//printf("yg DoBizSetPara chn%d\n", psBizPara->sBizParaTarget.nChn);
+			//printf("%s EM_BIZ_STROSD chn%d\n", __func__, psBizPara->sBizParaTarget.nChn);
 			return ConfigSetCfgStrOsd((SBizCfgStrOsd *)psBizPara->pData, psBizPara->sBizParaTarget.nChn);
 		case EM_BIZ_RECTOSd:
 			return ConfigSetCfgRectOsd((SBizCfgRectOsd *)psBizPara->pData, psBizPara->sBizParaTarget.nChn);

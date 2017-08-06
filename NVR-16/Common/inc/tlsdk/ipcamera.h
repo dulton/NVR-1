@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #define SUBSTREAM_BUFSIZE (200*1024)
-#define MAINSTREAM_BUFSIZE (500*1024)
+#define MAINSTREAM_BUFSIZE (640*1024)
 
 
 
@@ -333,6 +333,8 @@ typedef int (*Cmd_PtzCtrl)(int chn, EMPTZCMDTYPE cmd, void* data);
 typedef int (*Cmd_SetTime)(int chn, time_t t, int force);
 typedef int (*Cmd_SetMD)(int chn, md_para_t *para);
 typedef int (*Cmd_SetOSD)(int chn, char *name);
+typedef int (*Cmd_GetOSD)(int chn, char *name, int size);
+
 typedef int (*Cmd_SetVENC)(int chn, int stream, VideoEncoderParam *para);//0-主码流,1-次码流
 typedef int (*Cmd_GetVENC)(int chn, int stream, VideoEncoderParam *para);//0-主码流,1-次码流
 typedef int (*Cmd_GetAudioSwitchStatus)(int chn);
@@ -353,6 +355,7 @@ typedef struct
 	Cmd_SetTime SetTime;
 	Cmd_SetMD SetMD;
 	Cmd_SetOSD SetOSD;
+	Cmd_GetOSD GetOSD;
 	Cmd_SetVENC SetVENC;
 	Cmd_GetVENC GetVENC;
 	Cmd_Reboot Reboot;
@@ -374,6 +377,7 @@ int IPC_CMD_SetTime(int chn, time_t t, int force);
 int IPC_CMD_SetMD(int chn, md_para_t *para);
 //yaogang modiy 20140918
 int IPC_CMD_SetOSD(int chn, char *name);
+int IPC_CMD_GetOSD(int chn, char *name, int size);
 
 int IPC_CMD_Reboot(int chn);
 

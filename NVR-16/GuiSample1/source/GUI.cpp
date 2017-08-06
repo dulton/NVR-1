@@ -151,17 +151,22 @@ VD_BOOL CGUI::Start()
 	}while(!m_pDevMouse);
 	
 	//printf("CGUI::Start-2\n");
-	
+
+	//yaogang modify 20170725 YueTian New Board (无前面板)
+	#if 0
 	do
 	{
 		m_pDevFrontboard = CDevFrontboard::instance();
 		usleep(100*1000);
 	}while(!m_pDevFrontboard);
+	#endif
 	
 	//printf("CGUI::Start-3\n");
 	
 	SetDevMouse(m_pDevMouse);
 	//RunThread(0);
+
+	//yaogang modify 20170725 YueTian New Board (无前面板)
 	SetDevFrontBoard(m_pDevFrontboard);
 	//RunThread(1);
 	
@@ -327,9 +332,12 @@ VD_BOOL CGUI::Start()
 	m_pDevMouse->SetRect(&sNewMouseRect);
 	
 	SetSystemLockStatus(1);//cw_reboot
-	
-	m_pDevMouse->AttachInput(this, (SIG_DEV_MOUSE_INPUT)&CGUI::OnMouseInput);
-	m_pDevFrontboard->AttachInput(this, (SIG_DEV_FB_INPUT)&CGUI::onFrontboardIntput);
+
+	if (m_pDevMouse)
+		m_pDevMouse->AttachInput(this, (SIG_DEV_MOUSE_INPUT)&CGUI::OnMouseInput);
+
+	if (m_pDevFrontboard)
+		m_pDevFrontboard->AttachInput(this, (SIG_DEV_FB_INPUT)&CGUI::onFrontboardIntput);
 	
 	#if 0//debug for 3531
 	printf("show logo$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
@@ -864,7 +872,9 @@ void CGUI::OnHumanInput(uint msg, uint wpa, uint lpa, int screen)
 			} 
 #endif
 		}
-		m_pDevFrontboard->KeepAlive();
+	
+		if (m_pDevFrontboard)
+			m_pDevFrontboard->KeepAlive();
 		return;
 	default:
 		break;
@@ -893,9 +903,13 @@ void CGUI::OnHumanInput(uint msg, uint wpa, uint lpa, int screen)
 	CGuard guard(m_Mutex);
 	if((msg == XM_KEYDOWN || msg == XM_KEYUP) && (lpa & FB_FLAG_REMOTE) && m_bRemoteEnabled)
 	{
-		m_pDevFrontboard->LigtenLed(LED_REMOTE, FALSE);
+		if (m_pDevFrontboard)
+			m_pDevFrontboard->LigtenLed(LED_REMOTE, FALSE);
+		
 		SystemSleep(20);
-		m_pDevFrontboard->LigtenLed(LED_REMOTE, TRUE);
+
+		if (m_pDevFrontboard)
+			m_pDevFrontboard->LigtenLed(LED_REMOTE, TRUE);
 	}
 }
 
@@ -1092,7 +1106,8 @@ void CGUI::RemoteEnable(VD_BOOL bFlag)
 {
 	CGuard guard(m_Mutex);
 	
-	m_pDevFrontboard->LigtenLed(LED_REMOTE, bFlag);
+	if (m_pDevFrontboard)
+		m_pDevFrontboard->LigtenLed(LED_REMOTE, bFlag);
 	//g_Cmos.WriteFlag(CMOS_REMOTE_LOCK, !bFlag);
 	m_bRemoteEnabled = bFlag;
 }

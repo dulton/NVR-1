@@ -1760,7 +1760,7 @@ int EventLiveFreshDeal(int ch)
 		
 		y2+=nOsdHeight+2;
 		//add by liu 
-		printf("bizPreCfg.nShowRecState: %d\n",bizPreCfg.nShowRecState);
+		//printf("bizPreCfg.nShowRecState: %d\n",bizPreCfg.nShowRecState);
 		
 		if(bizPreCfg.nShowRecState)
 		{
@@ -15959,14 +15959,16 @@ int SaveScrStr(u32 nItemID, u8 ch, char* pStr)
 		case GSR_CONFIG_LIVE_ALLCHN             : {;} break; // GSR_CONFIG_LIVE_BASE+1
 		case GSR_CONFIG_LIVE_CHNNAME            : 
 		{
-			printf("yg SaveScrStr GSR_CONFIG_LIVE_CHNNAME chn%d\n", ch);
+			//printf("yg SaveScrStr GSR_CONFIG_LIVE_CHNNAME chn%d\n", ch);
 			SBizCfgStrOsd bizStrOsd;
 			sParaTgtIns.emBizParaType = EM_BIZ_STROSD;
 			sParaTgtIns.nChn = ch;
+			//printf("%s get osd\n", __func__);
 			rtn = BizGetPara(&sParaTgtIns, &bizStrOsd);
 			if(0==rtn)
 			{
-				//printf("$$chn %d, name = %s\n",ch,pStr);
+				//printf("%s GSR_CONFIG_LIVE_CHNNAME & ALLCHN chn %d, osd name get: %s, set: %s\n",
+				//	__func__, ch, bizStrOsd.strChnName, pStr);
 				
 				strcpy(bizStrOsd.strChnName, pStr);
 				
@@ -16757,7 +16759,7 @@ int SaveScrInt(u32 nItemID, u8 ch, int val)
 			if(0==rtn)
 			{
 					//printf("GSR_CONFIG_LIVE_LIVEREC 2222\n");
-					printf("get EM_BIZ_PREVIEWPARA nMode: %d\n", bizPreCfg.nMode);
+					//printf("get EM_BIZ_PREVIEWPARA nMode: %d\n", bizPreCfg.nMode);
 					//bizPreCfg.nMode = 16;
 					bizPreCfg.nShowRecState = val;
 					
@@ -18741,7 +18743,7 @@ int SaveScrStr2Cfg(
 			pEdit = (CEdit*)pVoid;
 			
 			pEdit->GetText(szStr, sizeof(szStr));
-			//printf("%s\n",szStr);//QYJ
+			//printf("%s chn%d edit: %s\n",__func__, ch, szStr);//QYJ
 			
 			ret = SaveScrStr(nItemID, ch, szStr);
 		}

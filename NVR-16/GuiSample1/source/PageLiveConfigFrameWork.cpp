@@ -294,7 +294,7 @@ void CPageLiveConfigFrameWork::OnClickSubPage()
 			{
 				if(curID == LIVECONFIG_BT_LIVE)
 				{
-					printf("yaogang LIVECONFIG_BT_LIVE\n");				
+					//printf("yaogang LIVECONFIG_BT_LIVE\n");				
 					WriteLogs();
 
 					//现场配置参数保存
@@ -339,7 +339,7 @@ void CPageLiveConfigFrameWork::OnClickSubPage()
 						//printf("chn %d, name = %s - 111\n",i,szChName[i]);
 						pTmpEdit->SetText(szChName[i]);
 						//printf("chn %d, name = %s - 222\n",i,szChName[i]);
-						
+						//printf("%s line edit\n", __func__);
 						ret = SaveScrStr2Cfg(pTmpEdit,
 									GSR_CONFIG_LIVE_CHNNAME,
 									EM_GSR_CTRL_EDIT,
@@ -348,7 +348,8 @@ void CPageLiveConfigFrameWork::OnClickSubPage()
 								    
 						//printf("chn %d, GetMaxChnNum = %d, show = %d, ret = %d\n",i,GetMaxChnNum(),bCheckValue[i],ret);
 						pTmpCheck->SetValue(bCheckValue[i]);
-						
+
+						//printf("%s checkbox\n", __func__);
 						SaveScrStr2Cfg(pTmpCheck,
 									GSR_CONFIG_LIVE_DISPLAY,
 									EM_GSR_CTRL_CHK,

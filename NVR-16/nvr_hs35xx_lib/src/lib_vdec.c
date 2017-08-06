@@ -47,8 +47,8 @@
 //csp modify 20140406
 #define VDEC_PAUSE_ZOOM_DEBUG
 
-#define VDEC_FRAME_MODE
-//#undef VIDEO_MODE_FRAME
+//#define VDEC_FRAME_MODE
+
 //csp modify 20140406
 static unsigned char is_playing = 0;
 unsigned char GetPlayingStatus()

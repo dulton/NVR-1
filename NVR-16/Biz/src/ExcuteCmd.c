@@ -1796,6 +1796,90 @@ void DealRemoteCmd_Getimgparam(
 	//if(sRectOds.psRectOsd) free(sRectOds.psRectOsd); //zlb20111117 去掉部分malloc
 }
 
+//yaogang modify 20170715 简易设置通道名的接口
+void DealRemoteCmd_SetChnName(
+	SRemoteCmdReq* pCmd,
+	SRemoteCmdRslt* pRslt
+)
+{
+	SBizParaTarget 		sParaTgtIns;	
+	ifly_ImgParam_t* 	pImaginfo = &pCmd->sReq.ImgParam;
+	
+	sParaTgtIns.nChn 			= pCmd->sReq.nChn;
+	
+	SBizCfgStrOsd 		sStrOds;	
+	memset( &sStrOds, 0, sizeof( sStrOds ) );
+	sParaTgtIns.emBizParaType 	= EM_BIZ_STROSD;
+	
+	int rtn = BizGetPara( &sParaTgtIns, &sStrOds );
+	if(0==rtn)
+	{		
+		int nChLMax = GetChnNameMax();
+
+		if( strncmp(sStrOds.strChnName, pImaginfo->channelname, nChLMax) != 0 )
+		{
+			strncpy(sStrOds.strChnName, pImaginfo->channelname, nChLMax);
+			BizSetPara( &sParaTgtIns, &sStrOds );
+			
+			BizNetWriteLog( pCmd->cph,  BIZ_LOG_MASTER_SYSCONFIG , BIZ_LOG_SLAVE_CHANGE_CHN_NAME  );
+		}
+	}	
+}
+
+
+void DealRemoteCmd_GetChnName(
+	SRemoteCmdReq* pCmd,
+	SRemoteCmdRslt* pRslt
+)
+{
+	int rtn = 0;
+	int chn = pCmd->sReq.nChn;
+	ifly_ImgParam_t* 	pImaginfo= &pRslt->sBasicInfo.ImgParam;
+	char ChnName[32];
+	int flag_from_ipc = 1;//从IPC获取OSD成功
+
+	//get osd from ipc
+	memset(ChnName, 0, sizeof(ChnName));	
+	rtn = IPC_CMD_GetOSD(chn, ChnName, sizeof(ChnName));
+	if (0 == ChnName[0])//(rtn || 0 == ChnName[0])
+	{
+		printf("%s IPC_CMD_GetOSD chn%d failed\n", __func__, chn);
+		flag_from_ipc = 0;
+	}
+	else
+	{
+		strcpy(pImaginfo->channelname, ChnName);
+	}
+
+	//get osd from config
+	SBizParaTarget 		sParaTgtIns;
+	sParaTgtIns.nChn 			= chn;
+	
+	SBizCfgStrOsd 		sStrOds;	
+	memset(&sStrOds, 0, sizeof( sStrOds ) );
+	sParaTgtIns.emBizParaType 	= EM_BIZ_STROSD;
+	
+	rtn = BizGetPara( &sParaTgtIns, &sStrOds );
+	if(0 == rtn)
+	{
+		if (flag_from_ipc)
+		{
+			if (strcmp(sStrOds.strChnName, ChnName))
+			{
+				strcpy(sStrOds.strChnName, ChnName);
+				BizSetPara( &sParaTgtIns, &sStrOds );
+			}
+		}
+		else
+		{
+			strcpy(pImaginfo->channelname, sStrOds.strChnName);
+		}
+	}
+	
+	//printf("%s chn%d name: %d,%s\n", __func__, sParaTgtIns.nChn, strlen(pImaginfo->channelname), pImaginfo->channelname);
+	//if(sRectOds.psRectOsd) free(sRectOds.psRectOsd); //zlb20111117 去掉部分malloc
+}
+
 
 // unicode / utf8 exchange
 
@@ -4278,7 +4362,7 @@ void DealRemoteCmd_GetAddIpcList(
 			
 			struct in_addr host1;
 			host1.s_addr = pSearchIpc->para_log[count].dwIp;
-			printf(" %d:%s \n",count,inet_ntoa(host1));
+			//printf(" %d:%s \n",count,inet_ntoa(host1));
 			count++;
 		}
 		
@@ -5908,6 +5992,9 @@ SCmdCBPair pNetCmdCB[] = {
 	{CTRL_CMD_CLEAN_ALARM_ICON, DealRemoteCmd_CleanDesktopAlarmIcon},
 	{CTRL_CMD_CLOSE_GUIDE, DealRemoteCmd_CloseGuide},
 	{CTRL_CMD_GET_IPCCHN_LINKSTATUS, DealRemoteCmd_GetIPCChnLinkStatus},
+	//yaogang modify 20170715 简易设置通道名的接口
+	{CTRL_CMD_GET_CHN_NAME, DealRemoteCmd_GetChnName},
+	{CTRL_CMD_SET_CHN_NAME, DealRemoteCmd_SetChnName},	
 };
 #endif
 
@@ -5959,7 +6046,7 @@ int GetChnNameMax( void )
 	vLen = 720/ColNum/TEXT_WIDTH*3-6;
 	vLen = (vLen > 27)?27:vLen;
 	
-	printf("GetChnNameMax vLen=%d ColNum=%d\n",vLen,ColNum);
+	//printf("GetChnNameMax vLen=%d ColNum=%d\n",vLen,ColNum);
 	
 	return vLen;
 }

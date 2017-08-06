@@ -22,7 +22,7 @@ typedef sem_t SemHandle;
 #endif
 
 //yaogang modify for server heart beat check
-#define HEART_BEAT_INTERVAL (1*60) //10min
+#define HEART_BEAT_INTERVAL (10*60) //10min
 
 
 static char g_upnpid[16] = {0};
@@ -769,7 +769,7 @@ void *CPTaskProc(void *pParam)
 				continue;
 			}
 
-			if (abs(cur_time_s - last_msg_time_s) > HEART_BEAT_INTERVAL+3*60)// 15 min
+			if (abs(cur_time_s - last_msg_time_s) > HEART_BEAT_INTERVAL+5*60)// 15 min
 			{
 				printf("client %s connect lost\n", inet_ntoa(in));
 				if(pfuncMsgCB != NULL)
@@ -915,7 +915,8 @@ void *CPTaskProc(void *pParam)
 					}
 					if(cprcvhead.event == CTRL_NOTIFY_HEARTBEAT_REQ)
 					{
-						//printf("recv heartbeat req msg from (0x%08x,%d)\n",hCPLink[i].ip,hCPLink[i].port);
+						in.s_addr = hCPLink[i].ip;
+						//printf("recv heartbeat req msg from (0%s,%d)\n", inet_ntoa(in), hCPLink[i].port);
 
 						cpsndhead.length	= htonl(sizeof(ifly_cp_header_t));
 						cpsndhead.type		= htons(CTRL_NOTIFY);
@@ -925,7 +926,6 @@ void *CPTaskProc(void *pParam)
 #if 1
 						if (send(hCPLink[i].sockfd,(char *)&cpsndhead,ntohl(cpsndhead.length),0) < 0)
 						{
-							in.s_addr = hCPLink[i].ip;
 							printf("send heart beat resp failed, ip: %s\n", inet_ntoa(in));
 							
 							if(pfuncMsgCB != NULL)
@@ -1280,7 +1280,7 @@ void *CPAckSearchProc(void *pParam)
 //	strcpy(lan_productnum, g_upnpid);
 #endif
 	
-	if(type == CTRL_DEVICESEARCH_ACKSERVER)
+	if(type == CTRL_DEVICESEARCH_ACKSERVER)//接收搜索组播，然后回应
 	{
 		struct sockaddr_in ser;
 		SOCKHANDLE serSocket;

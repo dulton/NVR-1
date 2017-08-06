@@ -406,7 +406,7 @@ void CPageMainFrameWork::OnClkMainItem()
 
 						//BizSysComplexExit(EM_BIZSYSEXIT_POWEROFF);
 						//BizSysComplexExit(EM_BIZSYSEXIT_POWEROFF);  //cw_shutdown
-						if(FxnKeycodeShut()<0)
+						if(TRUE != FxnKeycodeShut())
 						{
 							SetSystemLockStatus(0);//cw_lock
 						}

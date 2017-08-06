@@ -692,8 +692,8 @@ extern unsigned int getTimeStamp();
 
 //#define IPC_PROTOCOL_TEST //test record disk error by yaogang 20170222
 
-//#define	UsePreviewQueue
-#undef	UsePreviewQueue
+#define	UsePreviewQueue
+//#undef	UsePreviewQueue
 
 #ifdef	UsePreviewQueue
 
@@ -2038,8 +2038,8 @@ void *NVRPreviewFxnChn(void *arg)
 					dowhilesuccess = 0;
 					memset(header, 0, 5);
 					/******************************************/
-					
-					do{
+					//已经组合I帧
+					//do{
 						memset(&stream, 0, sizeof(stream));
 
 						ret = ReadFrameFromPreviewQueuePts(chn, FrameBuf, FRAME_BUF, &stream, &LocalPts);
@@ -2063,7 +2063,8 @@ void *NVRPreviewFxnChn(void *arg)
 							//出错重置
 							ChnStatus[ChnIdx] = StatusChnRst;
 							
-							break;
+							//break;
+							continue;
 						}
 						
 						if (stream.pts + 800*1000 < QueueLastIPCPtsChn[chn]) //缓冲的帧过多
@@ -2081,7 +2082,8 @@ void *NVRPreviewFxnChn(void *arg)
 							//出错重置
 							ChnStatus[ChnIdx] = StatusChnRst;
 							
-							break;
+							//break;
+							continue;
 						}
 
 						/********************for test**********************/
@@ -2108,7 +2110,7 @@ void *NVRPreviewFxnChn(void *arg)
 								getTimeStamp());
 						}
 						#endif
-					} while (stream.len > 5 && ((stream.data[4] & 0x1f) >= 6) && ((stream.data[4] & 0x1f) <= 8) );//while (stream.len < 50);//一次刷新I帧的4个部分帧
+					//} while (stream.len > 5 && ((stream.data[4] & 0x1f) >= 6) && ((stream.data[4] & 0x1f) <= 8) );//while (stream.len < 50);//一次刷新I帧的4个部分帧
 				}
 
 				//出错重置
@@ -2154,8 +2156,8 @@ void *NVRPreviewFxnChn(void *arg)
 						dowhilesuccess = 0;
 						memset(header, 0, 5);
 						/******************************************/
-						
-						do{
+						//已经组合I帧
+						//do{
 							memset(&stream, 0, sizeof(stream));
 
 							ret = ReadFrameFromPreviewQueue(chn, FrameBuf, FRAME_BUF, &stream);
@@ -2189,7 +2191,7 @@ void *NVRPreviewFxnChn(void *arg)
 							in_stream.data = stream.data;
 							in_stream.len = stream.len;
 							nvr_preview_vdec_write(stream.chn, &in_stream);
-						} while (stream.len > 5 && ((stream.data[4] & 0x1f) >= 6) && ((stream.data[4] & 0x1f) <= 8) );//while (stream.len < 50);//一次刷新I帧的4个部分帧
+						//} while (stream.len > 5 && ((stream.data[4] & 0x1f) >= 6) && ((stream.data[4] & 0x1f) <= 8) );//while (stream.len < 50);//一次刷新I帧的4个部分帧
 
 						
 						if (adderrcnt++ > 2)
@@ -3113,8 +3115,8 @@ int DealRealStream(real_stream_s *stream, unsigned int dwContext)
 	if(stream->media_type != MEDIA_PT_H264)
 	{
 		#ifdef HI3535
-			//return DealRealAudio(stream, dwContext);
-			return 0;
+			return DealRealAudio(stream, dwContext);
+			//return 0;
 		#else
 			return 0;//yg modify 20140913
 		#endif

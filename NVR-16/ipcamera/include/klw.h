@@ -40,6 +40,8 @@ int KLW_CMD_SetTime(int chn, time_t t, int force);
 
 int KLW_CMD_SetMD(int chn, md_para_t *para);
 int KLW_CMD_SetOSD(int chn, char *name);
+int KLW_CMD_GetOSD(int chn, char *name, int size);
+
 int KLW_CMD_GetVENC(int chn, int stream, VideoEncoderParam *para);//0-主码流,1-次码流
 
 int KLW_CMD_SetVENC(int chn, int stream, VideoEncoderParam *para);//0-主码流,1-次码流

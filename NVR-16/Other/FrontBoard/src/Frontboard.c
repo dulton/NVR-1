@@ -1451,10 +1451,18 @@ int FrontboardWrite( void* pData, uint nBytes )
 #ifdef longse
 	return nBytes;
 #else
-	if((NULL == pData) || (nBytes > 4) || (NULL == g_Center))
+	if((NULL == pData) || (nBytes > 4))
 	{
 		fprintf(stderr, "Invalid param! function:%s\n", __FUNCTION__);
 		return -1;
+	}
+
+	
+	//yaogang modify 20170725 YueTian New Board (ÎÞÇ°Ãæ°å)
+	if (NULL == g_Center)
+	{
+		printf("%s g_Center == NULL\n", __func__);
+		return nBytes; //success
 	}
 	
 	//csp modify

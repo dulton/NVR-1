@@ -880,7 +880,7 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_VIDEO_AUDIO, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
 		//启动告警
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
-		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, MAINSTREAM_BUFSIZE);
+		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, 600*1024);
 	}
 	if(ret != VVV_SUCCESS)
 	{
@@ -1941,6 +1941,116 @@ int KLW_CMD_SetVENC(int chn, int stream, VideoEncoderParam *para)
 	return 0;
 }
 
+int KLW_CMD_GetOSD(int chn, char *name, int size)
+{
+	//struct timeval tv;
+	//gettimeofday(&tv, NULL);
+	//printf("yg time: %d.%d\n", tv.tv_sec, tv.tv_usec);
+#if 1
+	int ret;
+	
+	if(name == NULL)
+	{
+		return -1;
+	}
+	
+	ipc_unit ipcam;
+	if(IPC_Get(chn, &ipcam))
+	{
+		return -1;
+	}
+	
+	if(!g_sdk_inited)
+	{
+		int ret = VVV_NET_Init();
+		if(ret != VVV_SUCCESS)
+		{
+			printf("VVV_NET_Init failed\n");
+			return -1;
+		}
+		g_sdk_inited = 1;
+	}
+	pthread_mutex_lock(&g_klwc_info[chn].lock);
+	
+	if(g_klwc_info[chn].u32DevHandle == INVALID_DEVHDL)
+	{
+		pthread_mutex_unlock(&g_klwc_info[chn].lock);
+		printf("%s chn%d, DevHandle invalid\n", __func__, chn);
+		return -1;
+	}
+
+	VVV_CHN_OSDINFO_S stOsdInfo;
+	unsigned int s32Size = sizeof(stOsdInfo);
+
+	//printf("Get Osd Attr chn%d, DevHandle: %d, name: %s\n", chn, g_klwc_info[chn].u32DevHandle, name);	
+	memset(&stOsdInfo, 0, s32Size);
+	stOsdInfo.chn = 0;//该字段必须为0
+	stOsdInfo.dwSize = s32Size;
+	ret = VVV_NET_GetServerConfig(g_klwc_info[chn].u32DevHandle, VVV_CMD_GET_CHN_OSDINFO, (void*)&stOsdInfo, &s32Size);
+	//printf("VVV_CMD_GET_CHN_OSDINFO: ret=%d,chn=%d\nbShowTime\t%d\nTimePosition\t%d\nbShowString\t%d\nStringPosition\t%d\ncsString\t%s\n",
+		//ret,stOsdInfo.chn,stOsdInfo.bShowTime, stOsdInfo.TimePosition,
+		//stOsdInfo.bShowString, stOsdInfo.StringPosition,
+		//stOsdInfo.csString);
+	if(ret != 0)
+	{
+		printf("VVV_CMD_GET_CHN_OSDINFO failed ret:%d \n", ret);
+		pthread_mutex_unlock(&g_klwc_info[chn].lock);
+		return -1;
+	}
+
+	//printf("%s chn%d GetServerConfig ret size:%d\n", __func__, chn, strlen(stOsdInfo.csString));
+
+	char inbuf[48];
+	char outbuf[48];
+	strcpy(inbuf, stOsdInfo.csString);
+	memset(outbuf, 0, sizeof(outbuf));
+	
+	size_t inbytesleft = strlen(inbuf);
+	size_t outbytesleft = sizeof (outbuf);
+	char *inptr = inbuf;
+	char *outptr = (char *) outbuf;
+	
+//iconv_t iconv_open (const char* tocode, const char* fromcode);
+	iconv_t cd = iconv_open ("UTF-8", "GB18030");
+	if (cd == (iconv_t)(-1)) 
+	{
+		printf("iconv_open failed\n");
+		pthread_mutex_unlock(&g_klwc_info[chn].lock);
+		return -1;
+	} 
+	
+	size_t r = iconv (cd,
+	                  (char **) &inptr, &inbytesleft,
+	                  (char **) &outptr, &outbytesleft);
+
+	//if (!(r == (size_t)(-1) && errno == EINVAL))
+	if (r == (size_t)(-1) )
+	{
+		//"GB18030" to "UTF-8" 失败
+		
+		printf("%s iconv() UTF-8 to GB18030 failed r: %d\n", __func__, r);
+		pthread_mutex_unlock(&g_klwc_info[chn].lock);
+
+		iconv_close(cd);
+		return -1;
+	}
+	
+	iconv_close(cd);
+
+	if (size < strlen(outptr)+1)
+	{
+		printf("%s out of range, param size(%d) < iconv out size(%d)\n", __func__, size, strlen(outptr)+1);
+	}
+
+	strcpy(name, outbuf);
+	
+	pthread_mutex_unlock(&g_klwc_info[chn].lock);
+	
+#endif
+	
+	return 0;
+}
+
 int KLW_CMD_SetOSD(int chn, char *name)
 {
 	//struct timeval tv;
@@ -2022,10 +2132,10 @@ int KLW_CMD_SetOSD(int chn, char *name)
 	} 
 
 
-	printf("KLW_CMD_SetOSD: chn%d\n", chn);
-	int i;
-	for(i=0; i<6; i++)
-		printf("0x%x\n", name[i]);
+	//printf("KLW_CMD_SetOSD: chn%d\n", chn);
+	//int i;
+	//for(i=0; i<6; i++)
+	//	printf("0x%x\n", name[i]);
 
 	
 	//yaogang modify 20140918 utf8 to gb2312
@@ -2062,7 +2172,7 @@ int KLW_CMD_SetOSD(int chn, char *name)
 		}
 		else
 		{
-			printf("KLW_CMD_SetOSD iconv UTF-8 to GB18030 success\n");
+			//printf("KLW_CMD_SetOSD iconv UTF-8 to GB18030 success\n");
 		}
 	}
 	iconv_close(cd);
@@ -2079,7 +2189,7 @@ int KLW_CMD_SetOSD(int chn, char *name)
 
 	if (strcmp(outbuf, stOsdInfo.csString) == 0)
 	{
-		printf("chn%d same name\n", chn);
+		//printf("chn%d same name\n", chn);
 		pthread_mutex_unlock(&g_klwc_info[chn].lock);
 		return 0;
 	}
@@ -2110,6 +2220,7 @@ int KLW_CMD_SetOSD(int chn, char *name)
 	
 	return 0;
 }
+
 
 
 int KLW_CMD_Reboot(int chn)

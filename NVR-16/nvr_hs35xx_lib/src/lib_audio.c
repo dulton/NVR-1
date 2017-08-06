@@ -1158,7 +1158,8 @@ int tl_audio_enable(int channel)
 	        printf("%s: HI_MPI_AI_EnableChn(%d,%d) failed with %#x\n", __FUNCTION__, ai_dev, ai_ch, s32Ret);
 	        return -1;
 	    }
-		
+
+		//printf("%s 1\n", __func__);
 #ifdef HI3535
 		static unsigned char aenc_start_flag = 0;
 		if(aenc_start_flag == 0)
@@ -1202,6 +1203,7 @@ int tl_audio_enable(int channel)
 			goto error2;
 		}
 #endif
+		//printf("%s 2\n", __func__);
 		
 		/********************************************
 		Aenc bind Ai Chn
@@ -1322,7 +1324,7 @@ int tl_audio_disable(int channel)
 int tl_audio_out_sel(int channel)
 {
 	unsigned char chn = channel;
-	//unsigned char value = 0;
+	printf("%s: chn%d\n", __func__, channel);
 	
 	if(TL_HSLIB_TYPE == TL_BOARD_TYPE_NR2116 || 
 		TL_HSLIB_TYPE == TL_BOARD_TYPE_NR3116 || 

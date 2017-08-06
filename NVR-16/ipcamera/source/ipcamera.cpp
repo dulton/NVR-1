@@ -743,6 +743,7 @@ int IPC_Set(int chn, ipc_unit *ipcam)
 		g_chn_info[chn].ops.SetTime = KLW_CMD_SetTime;
 		g_chn_info[chn].ops.SetMD = KLW_CMD_SetMD;//
 		g_chn_info[chn].ops.SetOSD = KLW_CMD_SetOSD;//
+		g_chn_info[chn].ops.GetOSD = KLW_CMD_GetOSD;//
 		g_chn_info[chn].ops.SetVENC= KLW_CMD_SetVENC;//
 		g_chn_info[chn].ops.GetVENC= KLW_CMD_GetVENC;//
 		g_chn_info[chn].ops.Reboot = KLW_CMD_Reboot;
@@ -759,7 +760,7 @@ int IPC_Set(int chn, ipc_unit *ipcam)
 		g_chn_info[chn].ops.GetImageParam = XM_CMD_GetImageParam;
 		g_chn_info[chn].ops.PtzCtrl = XM_CMD_PtzCtrl;
 		g_chn_info[chn].ops.SetTime = XM_CMD_SetTime;
-		g_chn_info[chn].ops.SetMD = NULL;
+		//g_chn_info[chn].ops.SetMD = NULL;
 		g_chn_info[chn].ops.Reboot = XM_CMD_Reboot;
 		g_chn_info[chn].ops.RequestIFrame = XM_CMD_RequestIFrame;
 	}
@@ -816,10 +817,10 @@ int IPC_Set(int chn, ipc_unit *ipcam)
 		g_chn_info[chn].ops.GetImageParam = Onvif_CMD_GetImageParam;
 		g_chn_info[chn].ops.PtzCtrl = Onvif_CMD_PtzCtrl;
 		g_chn_info[chn].ops.SetTime = Onvif_CMD_SetTime;
-		g_chn_info[chn].ops.SetMD = NULL;
-		g_chn_info[chn].ops.SetOSD = NULL;
-		g_chn_info[chn].ops.SetVENC = NULL;
-		g_chn_info[chn].ops.GetVENC = NULL;
+		//g_chn_info[chn].ops.SetMD = NULL;
+		//g_chn_info[chn].ops.SetOSD = NULL;
+		//g_chn_info[chn].ops.SetVENC = NULL;
+		//g_chn_info[chn].ops.GetVENC = NULL;
 		g_chn_info[chn].ops.Reboot = Onvif_CMD_Reboot;
 		g_chn_info[chn].ops.RequestIFrame = Onvif_CMD_RequestIFrame;
 		//g_chn_info[chn].ops.Snapshot_RegisterCB = NULL;
@@ -3311,6 +3312,38 @@ int IPC_CMD_SetOSD(int chn, char *name)
 #endif
 	return 0;
 }
+
+int IPC_CMD_GetOSD(int chn, char *name, int size)
+{
+	int ret = 0;
+	
+	if(!g_init_flag)
+	{
+		return -1;
+	}
+	
+	if(chn < 0 || chn >= (int)g_chn_count)
+	{
+		return -1;
+	}
+	
+	if(name == NULL || size <= 0)
+	{
+		return -1;
+	}
+	
+	pthread_mutex_lock(&g_chn_info[chn].lock);
+	
+	if(g_chn_info[chn].ops.GetOSD != NULL)
+	{
+		ret = g_chn_info[chn].ops.GetOSD(chn, name, size);
+	}
+	
+	pthread_mutex_unlock(&g_chn_info[chn].lock);
+	
+	return ret;
+}
+
 
 int IPC_CMD_GetVideoEncoderParam(int chn, int stream, VideoEncoderParam *para)//0-主码流,1-次码流
 {

@@ -360,7 +360,15 @@ s32 ConfigGetPlayBackImagePara(u32 bDefault,SBizPreviewImagePara *psPara, u8 nId
 s32 ConfigGetCfgStrOsd(u32 bDefault,SBizCfgStrOsd *psPara, u8 nId)
 {
 	int ret;
+	//int ret2;
+	//char ChnName[32];
+	//memset(ChnName, 0, sizeof(ChnName));
 
+	//printf("%s OSD chn%d name\n", __func__, nId);
+	
+	ret = 0;
+	//ret2 = 0;
+	
 	if (NULL == psPara)
 	{
 		return -1;
@@ -375,6 +383,7 @@ s32 ConfigGetCfgStrOsd(u32 bDefault,SBizCfgStrOsd *psPara, u8 nId)
 	else
 	{
 		ret = ModConfigGetParam(EM_CONFIG_PARA_STR_OSD, &sConfig, nId);
+		//ret2 = IPC_CMD_GetOSD(nId, ChnName, sizeof(ChnName));
 	}
 	
 	if (0 == ret)
@@ -389,6 +398,19 @@ s32 ConfigGetCfgStrOsd(u32 bDefault,SBizCfgStrOsd *psPara, u8 nId)
 		psPara->nEncShowTime = sConfig.nEncShowTime;
 		psPara->sEncTimePos.x = sConfig.nEncTimePosX;
 		psPara->sEncTimePos.y = sConfig.nEncTimePosY;
+
+		#if 0
+		if (0 == ret2)
+		{
+			if (ChnName[0] != 0 
+				&& strcmp(sConfig.nChnName, ChnName))
+			{
+				printf("%s OSD chn%d name, IPC != ModConfigGetParam!, set it\n", __func__, nId);
+				strcpy(psPara->strChnName, ChnName);
+				ConfigSetCfgStrOsd((SBizCfgStrOsd *)psPara, nId);
+			}
+		}
+		#endif
 	}
 	
 	return ret;
@@ -2237,13 +2259,18 @@ s32 ConfigSetCfgStrOsd(SBizCfgStrOsd *psPara, u8 nId)
 	SModConfigStrOsdpara sConfig;
 	
 	ret = ModConfigGetParam(EM_CONFIG_PARA_STR_OSD, &sConfig, nId);
-	
+
+	//printf("%s chn%d get chn name: %s, set chn name: %s\n", __func__, nId, sConfig.nChnName, psPara->strChnName);
 	if (strcmp(sConfig.nChnName, psPara->strChnName))
 	{
 		strcpy(sConfig.nChnName, psPara->strChnName);
+		//printf("%s 1\n", __func__);
 		EncodeStrOsdUpdate(nId, (u8 *)psPara->strChnName);
 		
 		nIsChanged = 1;
+
+		//yaogang modify 20170716 notify net client
+		BizSetUploadAlarmPara(14, nId, 0);
 	}
 	
 	if (sConfig.nShowChnName != psPara->nShowChnName)
@@ -2358,7 +2385,7 @@ s32 ConfigSetCfgStrOsd(SBizCfgStrOsd *psPara, u8 nId)
 	    //SendBizEvent(&sBizEventPara);
 	    DealCmdWithoutMsg(&sBizEventPara);
 	}
-	//printf("yg ConfigSetCfgStrOsd chn%d, name: %s\n", nId, sConfig.nChnName);
+	//printf("%s chn%d, name: %s to ipc\n", __func__, nId, sConfig.nChnName);
 	IPC_CMD_SetOSD(nId, sConfig.nChnName);
 	
 	#else
@@ -4352,6 +4379,8 @@ s32 ConfigSetIPCameraPara(SBizIPCameraPara *psPara, u8 nId)
 	sConfig.main_audio_sw = psPara->main_audio_sw;//主码流音频开关
 	sConfig.sub_audio_sw   = psPara->sub_audio_sw;//次码流音频开关
 
+	//yaogang modify 20170716 notify net client
+	BizSetUploadAlarmPara(13, nId, 0);
 	
 	int ret = ModConfigSetParam(EM_CONFIG_PARA_IPCAMERA, &sConfig, nId);
 	

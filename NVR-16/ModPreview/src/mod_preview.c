@@ -1072,7 +1072,8 @@ s32 ModPreviewVoip(u8 nEnable)
         return 0;
     }
 
-    printf("nMute %d nVoip %d\n", g_sPreviewManager.sPreviewAudio.nMute, g_sPreviewManager.sPreviewAudio.nVoip);
+    printf("%s: nEnable %d, nIsPreview %d, nMute %d, nVoip %d\n", __func__, nEnable,
+		g_sPreviewManager.nIsPreview, g_sPreviewManager.sPreviewAudio.nMute, g_sPreviewManager.sPreviewAudio.nVoip);
 
     if ((g_sPreviewManager.nIsPreview)
 		&& (0 == g_sPreviewManager.sPreviewAudio.nMute) 
@@ -1090,7 +1091,7 @@ s32 ModPreviewVoip(u8 nEnable)
         {
             tl_audio_out_sel(g_sPreviewManager.sPreviewAudio.nOutChn);
         }
-        printf("nFirstChn %d nOutChn %d\n", nFirstChn, g_sPreviewManager.sPreviewAudio.nOutChn);
+        //printf("%s nFirstChn %d nOutChn %d\n", __func__, nFirstChn, g_sPreviewManager.sPreviewAudio.nOutChn);
     }
     else
     {

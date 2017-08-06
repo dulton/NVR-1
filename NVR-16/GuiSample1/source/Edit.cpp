@@ -455,7 +455,7 @@ VD_BOOL CEdit::MsgProc(uint msg, uint wpa, uint lpa)
 		break;
 
 	case XM_INPUTTYPE:
-		printf("%s: input type: %d\n", __func__, (KEY_INPUT_TYPE)wpa);
+		//printf("%s: input type: %d\n", __func__, (KEY_INPUT_TYPE)wpa);
 		if(input_type != (KEY_INPUT_TYPE)wpa || lpa) // lpa表示是否强制打开面板
 		{
 			input_type = (KEY_INPUT_TYPE)wpa;

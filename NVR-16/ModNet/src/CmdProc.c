@@ -2612,7 +2612,95 @@ u16 DealCommand(
 		}
 		break;
 	case CTRL_CMD_GETADDIPCLIST:
-		{printf(" CTRL_CMD_GETADDIPCLIST CTRL_CMD_GETADDIPCLIST is start\n");
+		{printf("CTRL_CMD_GETADDIPCLIST is start\n");
+		#if 1
+			if (msgLen != sizeof(ifly_search_desc_t))
+			{
+				printf("msgLen != sizeof(ifly_search_desc_t)\n");
+				return CTRL_FAILED_PARAM;
+			}
+			
+			ifly_search_desc_t req_desc;
+			memcpy(&req_desc, pbyMsgBuf, sizeof(ifly_search_desc_t));
+			req_desc.startID = ntohs(req_desc.startID);
+
+			if (req_desc.startID < 1)
+			{
+				printf("req startID(%d) < 1\n", req_desc.startID);
+				return CTRL_FAILED_PARAM;
+			}
+			
+			SCPIpcInfo *pSearchIpc = &sRslt.sBasicInfo.sIpcInfo;
+			pSearchIpc->para_log = sIpcInfo1;//ifly_ipc_info_t array
+
+			if(NULL != pSearchIpc->para_log)
+			{
+				(*pCB)(&sReqIns, &sRslt);//执行回调				
+
+				if (pSearchIpc->Desc.sum == 0)
+				{
+					//printf("ret sum = 0\n");
+					pSearchIpc->Desc.sum = htons(pSearchIpc->Desc.sum);
+					pSearchIpc->Desc.startID = htons(0);
+					pSearchIpc->Desc.endID = htons(0);
+					memcpy(pbyAckBuf, &pSearchIpc->Desc, sizeof(pSearchIpc->Desc));
+
+					if (pAckLen)
+						*pAckLen = sizeof(pSearchIpc->Desc);
+					
+					return CTRL_SUCCESS;
+				}
+				
+				if(req_desc.startID > pSearchIpc->Desc.sum)
+				{
+					printf("req startID(%d) > ret sum(%d)\n", req_desc.startID, pSearchIpc->Desc.sum);
+					pSearchIpc->Desc.sum = htons(pSearchIpc->Desc.sum);
+					pSearchIpc->Desc.startID = htons(0);
+					pSearchIpc->Desc.endID = htons(0);
+					memcpy(pbyAckBuf, &pSearchIpc->Desc, sizeof(pSearchIpc->Desc));
+
+					if (pAckLen)
+						*pAckLen = sizeof(pSearchIpc->Desc);
+					
+					return CTRL_SUCCESS;
+				}
+
+				int max_ret_nums = (*pAckLen - sizeof(pSearchIpc->Desc))/sizeof(ifly_ipc_info_t);
+				//printf("pSearchIpc->Desc.sum: %d, max_ret_nums: %d\n", 
+				//	pSearchIpc->Desc.sum, max_ret_nums);
+				
+				pSearchIpc->Desc.startID = req_desc.startID;
+				pSearchIpc->Desc.endID = pSearchIpc->Desc.startID - 1 + min(max_ret_nums, pSearchIpc->Desc.sum - (pSearchIpc->Desc.startID-1));
+
+				//printf("ret startID: %d, endID: %d\n", pSearchIpc->Desc.startID, pSearchIpc->Desc.endID);
+				
+				int i;
+				ifly_ipc_info_t *ptmp = NULL;
+				for (i = pSearchIpc->Desc.startID-1, ptmp = (ifly_ipc_info_t *)(pbyAckBuf + sizeof(pSearchIpc->Desc)); \
+					i < pSearchIpc->Desc.endID; \
+					++i, ++ptmp)
+				{
+					memcpy(ptmp, &pSearchIpc->para_log[i], sizeof(ifly_ipc_info_t));
+				}
+
+				if (pAckLen)
+				{
+					*pAckLen = sizeof(pSearchIpc->Desc) + \
+						(pSearchIpc->Desc.endID - (pSearchIpc->Desc.startID-1))*sizeof(ifly_ipc_info_t);
+					//printf("realacklen: %d\n", *pAckLen);
+				}
+				
+				pSearchIpc->Desc.startID = htons(pSearchIpc->Desc.startID);
+				pSearchIpc->Desc.endID = htons(pSearchIpc->Desc.endID);
+				pSearchIpc->Desc.sum = htons(pSearchIpc->Desc.sum);
+
+				memcpy(pbyAckBuf, &pSearchIpc->Desc, sizeof(pSearchIpc->Desc));
+
+				return CTRL_SUCCESS;
+			}
+			
+		#else
+		
 			ifly_search_ipc_t* ipcSeach;
 			SCPIpcInfo	  *pSearchIpc;
 			int j;
@@ -2682,6 +2770,8 @@ u16 DealCommand(
 						sum++;
 					}
 					*pAckLen = sum*sizeof(ifly_ipc_info_t)+sizeof(ifly_search_desc_t);
+					printf("sum(%d) * sizeof(ifly_ipc_info_t)(%d)+sizeof(ifly_search_desc_t)%d\n",
+						sum, sizeof(ifly_ipc_info_t), sizeof(ifly_search_desc_t));
 					
 					pSearchIpc->Desc.endID = htons(sum-1+pSearchIpc->Desc.startID);
 					endid = sum-1+pSearchIpc->Desc.startID;
@@ -2704,6 +2794,7 @@ u16 DealCommand(
 			}
 			printf(" CTRL_CMD_GETSEACHIPCLIST CTRL_CMD_GETSEACHIPCLIST is end pAckLen = %d\n",*pAckLen);
 			
+		#endif	
 		}
 		break;
 	case CTRL_CMD_SETIPC:
@@ -2879,7 +2970,7 @@ u16 DealCommand(
 		}break;
 	case CTRL_CMD_CLOSE_GUIDE:
 		{
-			printf(" CTRL_CMD_CLOSE_GUIDE is start \n");
+			//printf(" CTRL_CMD_CLOSE_GUIDE is start \n");
 			ifly_preview_para_t *preview_para = &sRslt.sBasicInfo.preview_para;
 			
 			(*pCB)(&sReqIns, &sRslt);
@@ -2899,6 +2990,41 @@ u16 DealCommand(
 			*pAckLen = sizeof(ifly_ipc_chn_status_t);
 			//printf("CTRL_CMD_GET_IPCCHN_LINKSTATUS is end\n");
 		}break;
+	//yaogang modify 20170715 简易设置通道名的接口
+	case CTRL_CMD_GET_CHN_NAME:
+		{		
+			ifly_ImgParam_t* pImaginfo;
+			
+			pImaginfo = &sRslt.sBasicInfo.ImgParam;
+			sReqIns.sReq.nChn = *(u8*)pbyMsgBuf;
+			
+			//printf("CTRL_CMD_GET_CHN_NAME chn: %d\n", sReqIns.sReq.nChn);
+			
+			memset(pImaginfo, 0, sizeof(ifly_ImgParam_t));			
+			(*pCB)(&sReqIns, &sRslt);
+			
+			if(pAckLen)
+			{
+				*pAckLen = sizeof(ifly_ImgParam_t);
+			}
+			memcpy(pbyAckBuf, pImaginfo, sizeof(ifly_ImgParam_t));
+		}
+		break;
+		case CTRL_CMD_SET_CHN_NAME:
+		{
+			ifly_ImgParam_t* pSetimgparam;
+
+			pSetimgparam = &sReqIns.sReq.ImgParam;
+			memset(pSetimgparam, 0, sizeof(ifly_ImgParam_t));
+			memcpy(pSetimgparam, pbyMsgBuf, sizeof(ifly_ImgParam_t));
+
+			//printf("CTRL_CMD_SET_CHN_NAME chn: %d\n", sReqIns.sReq.nChn);
+
+			(*pCB)(&sReqIns, &sRslt);
+			
+			if(pAckLen) *pAckLen = 0;
+		}
+		break;
 	//xdc end 
 	}
 	return CTRL_SUCCESS;
