@@ -170,6 +170,7 @@ s32 SendCtlMsg(SPlayBackManager* pSPbMgr,SCtlMSG* pMsg,u32* ack)
 	{
 		return -1;
 	}
+	//printf("%s cmd: %d, cxt: %d\n", __func__, pMsg->emCmd, pMsg->unCxt);
 	
 	pthread_mutex_lock(&pSPbMgr->lock);//csp modify
 	
@@ -1433,7 +1434,7 @@ void* PBCtlFunc(void* arg)
 			goto PlayRunning;
 		}
 		
-		//printf("emPbCtlCmd = %d\n",emPbCtlCmd);
+		//printf("%s cur state: %d, emPbCtlCmd = %d\n",__func__, pSPbManager->emCurCtlState, emPbCtlCmd);
 		if(emPbCtlCmd == EM_CTL_MUTE)
 		{
 			int i;
@@ -3733,16 +3734,33 @@ s32 ModSnapDisplay(SPBRecSnapInfo* pSnapInfo)
 		ret = read_snap_file(index, buf, pSnapInfo->nFileNo, pSnapInfo->nOffset, pSnapInfo->nSize);
 		if (ret == 0)
 		{
-			/*
-			FILE *pfile = NULL;
-			char filename[32];
-			sprintf(filename, "snap%d.jpg", pSnapInfo->nChn);
-			pfile = fopen(filename, "wb");
-			fwrite(buf, pSnapInfo->nSize, 1, pfile);
-			fclose(pfile);
-			printf("%s: write %s ok\n", __func__, filename);
-			*/
+		#if 0 //debug
+			char file_name[64];
+			time_t pic_time = pSnapInfo->nStartTime;
+			struct tm now;
+			localtime_r(&pic_time, &now);
+			
+			sprintf(file_name, 
+				"/mnt/chn%02d_%02d-%02d-%02d.jpg", 
+				pSnapInfo->nChn, now.tm_hour+8, now.tm_min, now.tm_sec);
+	
+			FILE *fp = fopen(file_name, "w");
+			if(fp != NULL)
+			{
+				fwrite(buf, pSnapInfo->nSize, 1, fp);
+				fclose(fp);
+			}
+		#endif
+			
 			ret = tl_snap_vdec_write(buf, pSnapInfo->nSize);
+			if (ret)
+			{
+				printf("%s tl_snap_vdec_write failed\n", __func__);
+			}
+		}
+		else
+		{
+			printf("%s read_snap_file failed\n", __func__);
 		}
 	}
 

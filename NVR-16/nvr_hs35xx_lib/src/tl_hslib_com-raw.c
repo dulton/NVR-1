@@ -1828,7 +1828,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 				memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 				PreviewMsg.chn = chn + ARG_VI_NUM_MAX;
 				PreviewMsg.type = TypeStopChn;
-				printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
+				//printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
 				WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueue, (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
 				
 			}
@@ -1879,7 +1879,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 			memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 			PreviewMsg.chn = chn + ARG_VI_NUM_MAX;
 			PreviewMsg.type = TypeStartChn;
-			printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
+			//printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
 			WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueue, (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
 			//end
 		#else
@@ -1922,7 +1922,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 				memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 				PreviewMsg.chn = chn;
 				PreviewMsg.type = TypeStopChn;
-				printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
+				//printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
 				WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueue, (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
 			}
 			//end
@@ -1972,7 +1972,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 			memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 			PreviewMsg.chn = chn;
 			PreviewMsg.type = TypeStartChn;
-			printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
+			//printf("%s send msg chn%d, type: %d\n", __func__, PreviewMsg.chn, PreviewMsg.type);
 			WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueue, (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
 			//end
 		#else	

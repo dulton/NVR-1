@@ -1566,7 +1566,7 @@ VD_BOOL CPageIPCameraConfigFrameWork::UpdateData(UDM mode)
 	}
 	else if(UDM_OPENED == mode)
 	{
-		
+		//printf("CPageIPCameraConfigFrameWork::UpdateData-UDM_OPENED\n");
 	}
 	else if(UDM_CLOSED == mode)
 	{

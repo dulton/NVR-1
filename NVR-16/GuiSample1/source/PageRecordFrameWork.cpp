@@ -3148,7 +3148,7 @@ void CPageRecordFrameWork::OnComboBox_snap_chn_change()
 		pComboBox5[1][1]->Enable(TRUE);
 		pComboBox5[1][2]->Enable(TRUE);
 		
-		pComboBox5[0][0]->SetCurSel(2);//352*288
+		pComboBox5[0][0]->SetCurSel(1);//704*576
 		pComboBox5[0][1]->SetCurSel(1);//жа
 		pComboBox5[0][2]->SetCurSel(4);//5s
 		pComboBox5[1][0]->SetCurSel(2);

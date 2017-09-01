@@ -1441,7 +1441,15 @@ void AlarmEventCallback(SAlarmChn *psAlarmChn, FNALARMCB pfnAlarmCb, EMALARMEVEN
 	{
 		sendto_485ext_board(emAlarmEvent, chn, fd485);
 	}
-	
+
+	#if 0
+	//yaogang debug
+	if ((EM_ALARM_EVENT_SENSOR == emAlarmEvent)
+		&& (psAlarmChn->sEvent.nStatusLast != psAlarmChn->sEvent.nStatus) )
+	{
+		printf("%s sensor%d trigger\n", __func__, chn);
+	}
+	#endif
 }
 
 //yaogang modify 20141203 to YueTian 485Ext Board
@@ -2465,6 +2473,7 @@ void BuzzDispatch(SAlarmManager *psAlarmManager)
     psAlarmEvent = &psAlarmManager->sSensors;
     nStatus = CheckEventDispatchBuzz(psAlarmEvent);
 	
+	
 	//if(nStatus) printf("buzz event-1\n");
      if(0 == nStatus)
     {
@@ -2636,14 +2645,14 @@ u8 CheckEventDispatchBuzz(SAlarmEvent *psAlarmEvent)
     for(i =0; i <  psAlarmEvent->nChannels; i++)
     {
         psAlarmChn = &psAlarmEvent->psAlarmChn[i];
-/*
-	if (i == 0)
-		printf("yg CheckEventDispatchBuzz nstatus: %d, nFlagBuzz: %d\n", \
-			psAlarmChn->sEvent.nStatus, psAlarmChn->sAlarmDispatch.nFlagBuzz);
-*/
+
         if (1 == psAlarmChn->sEvent.nStatus && psAlarmChn->sAlarmDispatch.nFlagBuzz)
         {
-            return 1;
+			//if (i == 0)
+			//	printf("yg CheckEventDispatchBuzz nstatus: %d, nFlagBuzz: %d\n", \
+			//		psAlarmChn->sEvent.nStatus, psAlarmChn->sAlarmDispatch.nFlagBuzz);
+
+			return 1;
         }       
     }
 

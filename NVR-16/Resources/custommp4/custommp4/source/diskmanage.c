@@ -1002,8 +1002,7 @@ partition_index * get_pic_rec_partition(disk_manager *hdd_manager)
 	{
 		phinfo = &hdd_manager->hinfo[i];
 		//yaogang modify for bad disk
-		//if(phinfo->is_disk_exist)
-		if(phinfo->is_disk_exist && !phinfo->is_partition_exist)
+		if(phinfo->is_disk_exist && !phinfo->is_bad_disk)
 		{
 			for(j=0;j<MAX_PARTITION_NUM;j++)
 			{

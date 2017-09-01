@@ -678,6 +678,7 @@ u16 SendMediaFrameByTcpExt(SOCKHANDLE sock_fd, PFRAMEHDR pFrmHdr, u8 b_mutil, u8
 		{
 			u32 remain = i_size;
 			u32 sendlen = 0;
+			//printf("%s write to file time_stamp: %u\n", __func__, pFrmHdr->m_dwTimeStamp);
 			while(remain > 0)
 			{
 				int sendprelen = remain;
@@ -715,6 +716,19 @@ u16 SendMediaFrameByTcpExt(SOCKHANDLE sock_fd, PFRAMEHDR pFrmHdr, u8 b_mutil, u8
 			return 1;
 		}
 	}
+
+	#if 0//debug
+		char file_name[32];
+		strcpy(file_name, "/mnt/debug.pcm");
+
+		FILE *fp = fopen(file_name, "a");
+		if(fp != NULL)
+		{
+			fwrite(pFrmHdr->m_pData, tmp, 1, fp);
+			fclose(fp);
+			printf("%s write to file time_stamp: %u\n", __func__, pFrmHdr->m_dwTimeStamp);
+		}
+	#endif
 	
 	return 0;
 }
@@ -1812,6 +1826,7 @@ void *RemoteVoipRecvThread(void *arg)
 			ret = select(pVoipCtrl->sockfd+1, &sock_fd, NULL, NULL, &tv);
 			if(ret <= 0)// timeout; 
 			{
+				#if 0//yaogang
 				// stop & close talk avoid pc talk stop exception
 				if(++lost_cnr > TALK_LOST_FRAME_MAX)
 				{
@@ -1820,7 +1835,7 @@ void *RemoteVoipRecvThread(void *arg)
 				}
 				
 				//memset(buf, 0, sizeof(buf));
-				
+				#endif
 				printf("no talk data come???\n");
 				
 				continue;

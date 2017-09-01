@@ -1128,6 +1128,8 @@ void CGUI::UpdateGraphics()
 	m_pDevGraphics->GetRect(&new_rect);
 	if(memcmp(&old_rect, &new_rect, sizeof(VD_RECT)))//(memcpy(&old_rect, &new_rect, sizeof(VD_RECT)))
 	{
+		//printf("%s old/new: l(%d/%d, t(%d/%d), r(%d/%d), b(%d/%d)\n",
+		//	__func__, old_rect.left, new_rect.left, old_rect.top, new_rect.top, old_rect.right, new_rect.right, old_rect.bottom, new_rect.bottom);
 		m_pDevMouse->SetRect(&new_rect);
 		memcpy(&sNewMouseRect, &new_rect, sizeof(VD_RECT));
 		CItem::AdjustRectAll();

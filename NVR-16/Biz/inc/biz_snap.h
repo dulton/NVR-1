@@ -47,13 +47,13 @@ typedef enum
 	TypeDaily,			// 3 日常图片上传
 	TypeSvrReq,			// 4 服务器请求上传通道图片
 //record
-	TypePreSnap,			// 5 预录
+	TypePreSnap,		// 5 预录
 	TypeTime,			// 6 定时-录像配置--抓图参数
 	TypeManual,			// 7 手动截图
 //upload & record
-	TypeAlarmSensor,		// 8 本地传感器报警
+	TypeAlarmSensor,	// 8 本地传感器报警
 	TypeMotionDet,		// 9 移动侦测
-	TypeAlarmIPCEXT,		// 10 IPC外部报警
+	TypeAlarmIPCEXT,	// 10 IPC外部报警
 	TypeSnapMax,
 } EM_SNAP_TYPE;
 

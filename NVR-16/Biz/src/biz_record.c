@@ -298,8 +298,8 @@ typedef struct rec_header
 
 */
 //psHeader->nFrameType(EM_SNAP_TYPE) 抓图图片类型Convert to 保存图片类型
-//EM_SNAP_TYPE: 4 预录5 定时6 手动截图789 报警
-//index-4
+//EM_SNAP_TYPE: 5 预录6 定时7 手动截图8910 报警
+//index-5
 int SnapToSave[] = {5, 0, 4, 2, 1, 2};
 
 s32 RecordReadOnePreSnap(u8 nChn, SModRecRecordHeader* psHeader)
@@ -358,7 +358,7 @@ s32 RecordWriteOneSnap(u8 nChn, SModRecRecordHeader* psHeader)
 	memcpy(&tv, &psHeader->nPts, sizeof(tv));
 
 	//printf("%s chn%d, snap_type: 0x%x convert to save_type: 0x%x, size: %d, time: %d\n", 
-	//	__func__, nChn, snap_type, pic_type, psHeader->nDataLength, tv.tv_sec);
+		//__func__, nChn, snap_type, pic_type, psHeader->nDataLength, tv.tv_sec);
 	
 	return ModRecordSnapshotToBuf(nChn, pic_type, tv.tv_sec, tv.tv_usec, \
 		psHeader->nDate, psHeader->nDataLength, psHeader->width, psHeader->height);

@@ -263,7 +263,7 @@ void CPageSearch::OnClickSubPage()
 				}
 				break;
 			//yaogang modify 20140105
-			case 3://file
+			case 3://snap
 				{
 					//ClearPage3();
 					OnClickSearchSnap();
@@ -3294,7 +3294,6 @@ SELITEM:
 					}
 					else
 					{
-						SetSystemLockStatus(1);  //cw_lock
 						//本机回放
 						SSG_MSG_TYPE msg;
 						memset(&msg, 0, sizeof(msg));
@@ -3303,7 +3302,8 @@ SELITEM:
 						strcpy(msg.note, GetParsedString("&CfgPtn.Local"));
 						strcat(msg.note, GetParsedString("&CfgPtn.Playback"));
 						upload_sg(&msg);
-	
+						
+						SetSystemLockStatus(1);  //cw_lock	
 						PlayFile(m_mCurID, i+(((m_mCurID==2)?m_page2:m_curPage1)*8));
 						SetSystemLockStatus(0);
 					}

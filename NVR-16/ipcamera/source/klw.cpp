@@ -424,7 +424,7 @@ int OnEvenFunc(unsigned int u32Handle,    /* ¾ä±ú */
 {
 	int chn = (int)pUserData;
 	
-	printf("OnEvenFunc handle: %d event: %d\n", u32Handle, u32Event);
+	//printf("OnEvenFunc handle: %d event: %d\n", u32Handle, u32Event);
 	
 	#if 1
 
@@ -880,7 +880,7 @@ int KLW_Start(int chn, RealStreamCB pCB, unsigned int dwContext, char* streamInf
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_VIDEO_AUDIO, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
 		//Æô¶¯¸æ¾¯
 		//ret = VVV_NET_StartStream(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn);
-		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, 600*1024);
+		ret = VVV_NET_StartStream_EX(&g_klwc_info[chn].u32ChnHandle, g_klwc_info[chn].u32DevHandle, 0, VVV_STREAM_ALL, u32StreamFlag, &StreamInfo, KLW_DataCB, OnAlarmFunc, (void *)chn, 800*1024);
 	}
 	if(ret != VVV_SUCCESS)
 	{

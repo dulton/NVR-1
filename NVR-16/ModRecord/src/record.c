@@ -1001,7 +1001,7 @@ s32 RecordDealRecMsg(SModRecMsgHeader* sMsg)
 	if((sMsg->nMsg == EM_REC_V_MOTION) || (sMsg->nMsg == EM_REC_V_ALARM))//报警触发录像暂时只支持这两类
 	{
 		memcpy(&RecSchPara, &g_RecSchPara[sMsg->nChn + smgtype * g_ChnNum], sizeof(RecSchPara));
-		printf("%s RecSchPara.nTimeType: %d\n", __func__, RecSchPara.nTimeType);
+		//printf("%s RecSchPara.nTimeType: %d\n", __func__, RecSchPara.nTimeType);
 		switch(RecSchPara.nTimeType)
 		{
 			case EM_REC_SCH_ONCE_DAY:
@@ -1843,7 +1843,7 @@ s32 RecordOpenNewFile(custommp4_t** file, partition_index** p_ptn_index, char* r
 				pthread_mutex_lock(&g_mutex);
 				g_diskuse[chn] = disk_system_idx;//sda--1 sdb--2
 				pthread_mutex_unlock(&g_mutex);
-				printf("%s chn%d, disk_system_idx: %d\n", __func__, chn, disk_system_idx);
+				//printf("%s chn%d, disk_system_idx: %d\n", __func__, chn, disk_system_idx);
 				*offset = open_offset;
 				return EM_REC_SUCCESS;
 			}
@@ -2202,8 +2202,8 @@ void RecordMainFxn(void* ID)
 	s32 ret = 0;
 
 	//yaogang modify fileflush time test
-	u32 time_pre, time_cur, time_interval;
-	time_pre = time_cur = time_interval = 0;
+	//u32 time_pre, time_cur, time_interval;
+	//time_pre = time_cur = time_interval = 0;
 	
 	
 	for(i = 0; i < g_ChnNum; i++)
@@ -2671,8 +2671,8 @@ void RecordMainFxn(void* ID)
 								
 								//if(sMsg.nChn == 3)
 								{
-									fprintf(stdout, "***chn[%d], format:%d, file:%s, open_offset:%u, fd: %d***\n", 
-										sMsg.nChn, header.emResolution, recfilename, open_offset, fileno(file[sMsg.nChn]->stream));
+									//fprintf(stdout, "***chn[%d], format:%d, file:%s, open_offset:%u, fd: %d***\n", 
+									//	sMsg.nChn, header.emResolution, recfilename, open_offset, fileno(file[sMsg.nChn]->stream));
 								}
 								
 								max_pts[sMsg.nChn] = header.nPts;//csp modify
@@ -2864,7 +2864,7 @@ void RecordMainFxn(void* ID)
 							//在此更新索引文件中的信息
 							if(update)
 							{
-								time_pre = getTimeStamp();
+								//time_pre = getTimeStamp();
 								
 								fileflush(file[sMsg.nChn]->stream);
 								s_u_info[sMsg.nChn].end_time = max_pts[sMsg.nChn] / 1000000;
@@ -2876,8 +2876,8 @@ void RecordMainFxn(void* ID)
 								
 								check_disk_ptn("-update1");
 
-								time_cur = getTimeStamp();
-
+								//time_cur = getTimeStamp();
+								#if 0
 								if (time_cur > time_pre)
 								{
 									if (time_interval < (time_cur - time_pre))
@@ -2894,6 +2894,7 @@ void RecordMainFxn(void* ID)
 								{
 									printf("file flush interval: %u\n", time_interval);
 								}
+								#endif
 							}
 							
 							if(sMsg.nMsg == EM_REC_FORCE_END)
@@ -3867,7 +3868,8 @@ void* RecordSnapFxn(void* data)
 				ret = RecordReadSnapFromBuf(&header, pSnapData, SnapSize);//BufSnapCnt--
 				if(EM_REC_SUCCESS == ret)
 				{
-					//printf("%s ReadSnapformBuf success, will RecSnap\n", __func__);
+					//printf("%s ReadSnapformBuf success, chn:%d, pic_type: 0x%x, time: %d\n", \
+					//	__func__, header.chn, header.pic_type, header.tv_sec);
 					b_RecSnap = 1;					
 				}			
 				else
@@ -4613,7 +4615,7 @@ s32 ModRecordInit(u8 chn_num, SModRecordRecPara* para, FPMODRECSTATUS getrecstat
 	//测试硬盘，暂时关闭预录20150527
 
 	//yaogang modify for bad disk
-	//ret = pthread_create(&id, NULL, (void*)RecordSnapFxn, (void *)g_ChnNum);
+	ret = pthread_create(&id, NULL, (void*)RecordSnapFxn, (void *)g_ChnNum);
 	if(ret)
 	{
 		fprintf(stderr, " %s create pthread RecordSnapFxn error!!\n", __func__);
@@ -5626,7 +5628,9 @@ int ModRecordPreSnapToFile(u8 chn, time_t tv_sec, void *pdata, u32 data_size, u3
 	FILE *pf = NULL;
 	int ret;
 	u8 in, out, total;
-	prepic_use_info pic_info;	
+	prepic_use_info pic_info;
+
+	//printf("%s chn:%d time:%d\n", __func__, chn, tv_sec);
 	
 	if (chn < 16)
 		pf = pf_PreRecSnap[0];

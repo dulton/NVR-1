@@ -579,7 +579,7 @@ HI_S32 SAMPLE_VDEC_CreateVdecChn(HI_S32 s32ChnID, SIZE_S *pstSize, PAYLOAD_TYPE_
 		}
 	}
 			#ifdef HI3535//csp modify 20150110
-				stPrtclParam.s32DisplayFrameNum = 0;//1;
+				//stPrtclParam.s32DisplayFrameNum = 0;//1;//×¢ÊÍµô£¬·ñÔòÍ¼Æ¬Ô¤ÀÀÊ±¿´²»µ½Í¼Æ¬
 			#endif
 	//csp modify 20140406
 	//stPrtclParam.s32SCDBufSize = pstSize->u32Height * pstSize->u32Width * 3 / 2;

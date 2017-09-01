@@ -372,7 +372,7 @@ void CPageSnapPlayBack::OnClickDisPlay()
 		}
 	}
 	
-	printf("%s click row: %d\n", __func__, i);
+	//printf("%s click row: %d\n", __func__, i);
 	if (i < nrows)
 	{
 		if ((m_curPage*nrows + i) < sSearchSnapResult.nFileNum)
@@ -751,7 +751,7 @@ void CPageSnapPlayBack::MouseMoveToLine( int line)
 	int nrows = nlist_rows -1;//第一行显示列标题
 	int pages = (sSearchSnapResult.nFileNum + nrows -1)/nrows;
 
-	printf("%s(): nrows: %d, pages: %d, cur_line: %d, line: %d\n", __func__, nrows, pages, cur_line, line);
+	//printf("%s(): nrows: %d, pages: %d, cur_line: %d, line: %d\n", __func__, nrows, pages, cur_line, line);
 
 	if( (line >= 0) && (line < nrows) )
 	{

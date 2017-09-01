@@ -88,7 +88,7 @@ SDevInfo* modsys_GetDiskInfo(u8 nIdx)
 	SDiskInfo* pDiskInfo = sAllDiskInfoIns;
 	
 	pthread_mutex_lock(&updateLock);
-	printf("%s nIdx: %d, nValidDskCnr: %d\n", __func__, nIdx, nValidDskCnr);
+	//printf("%s nIdx: %d, nValidDskCnr: %d\n", __func__, nIdx, nValidDskCnr);
 	if(nIdx >= nValidDskCnr)
 	{
 		pthread_mutex_unlock(&updateLock);

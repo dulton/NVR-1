@@ -3730,7 +3730,11 @@ s32 EncDataDispatch(SBizEncodeData* psBizEncData)
 			
 			sNetFrmHead.dwlen 		= psEncHead->nLen;
 			sNetFrmHead.timeStamp	= PublicGetTimeStamp();//(u32)psEncHead->nTimeStamp;
-			
+
+			#if 0
+			printf("%s time_stamp before: %llu, after: %u\n", 
+				__func__, psEncHead->nTimeStamp, sNetFrmHead.timeStamp);
+			#endif
 			//debug_write(psEncHead->pData, psEncHead->nLen);
 			
 			sNetFrmHead.byMediaType = psEncHead->emEncodeType;

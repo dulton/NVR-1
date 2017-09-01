@@ -502,7 +502,7 @@ VD_BOOL CPageAlarmPictureConfig::UpdateData( UDM mode )
 	int ret, i;
 	char tmp[10];
 	int chn = pComboBox3[0]->GetCurSel();
-	printf("%s chn: %d\n", __func__, chn);
+	//printf("%s chn: %d\n", __func__, chn);
 		
 	if(UDM_OPEN == mode)
 	{
@@ -522,7 +522,7 @@ VD_BOOL CPageAlarmPictureConfig::UpdateData( UDM mode )
 
 			//pComboBox3[0]->SetCurSel(para.AlarmInput);
 
-			printf("para.SAlarmPicParam.IpcChn: 0x%x\n", para.IpcChn);
+			//printf("para.SAlarmPicParam.IpcChn: 0x%x\n", para.IpcChn);
 			if (para.IpcChn == 0xffffffff)//all
 			{
 				pCheckBoxAll->SetValue(1);
@@ -2172,7 +2172,7 @@ void CPageAlarmPictureConfig::OnCombox3()
 		sprintf(tmp, "%d", para.StillTimes);
 		pEdit3[2]->SetText(tmp);
 
-		printf("chn%d, para.SAlarmPicParam.IpcChn: 0x%x\n", chn, para.IpcChn);
+		//printf("chn%d, para.SAlarmPicParam.IpcChn: 0x%x\n", chn, para.IpcChn);
 		if (para.IpcChn == 0xffffffff)//all
 		{
 			pCheckBoxAll->SetValue(1);
@@ -2293,7 +2293,7 @@ void CPageAlarmPictureConfig::OnClickBtn()
 								para.IpcChn |= 1<<i;
 						}
 					}
-					printf("para.SAlarmPicParam.IpcChn: 0x%x\n", para.IpcChn);
+					//printf("para.SAlarmPicParam.IpcChn: 0x%x\n", para.IpcChn);
 
 					ret = bizData_SaveSGAlarmParam(chn, &para);
 					if (ret != 0)

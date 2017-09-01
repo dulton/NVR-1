@@ -242,7 +242,7 @@ s32 netComm_NotifySGuploadState(u32 chn, EM_MSG_TYPE type, u8 bState )
 	if (!bModInited )//|| (time(NULL) - inittime < 2*60 ) )
 		return 1;
 
-	printf("%s chn: %d, type: %d, bState: %d\n", __func__, chn, type, bState);
+	//printf("%s chn: %d, type: %d, bState: %d\n", __func__, chn, type, bState);
 	
 	memset(&sNotify, 0, sizeof(sNotify));
 	
@@ -310,14 +310,14 @@ s32 proc_svr_req(char *pmsg)
 	s = strstr(pmsg, "GetImage");
 	if (NULL == s)
 	{
-		printf("%s \"GetImage\" not found\n", __func__);
+		//printf("%s \"GetImage\" not found\n", __func__);
 		return 1;
 	}
 
 	s = strchr(s, '\"');  // " 上引号
 	if (NULL == s)
 	{
-		printf("%s \" not found\n", __func__);
+		//printf("%s \" not found\n", __func__);
 		return 1;
 	}
 
@@ -333,7 +333,7 @@ s32 proc_svr_req(char *pmsg)
 				break;
 			}
 
-			printf("%s strtol chn: %d\n", __func__, chn);
+			//printf("%s strtol chn: %d\n", __func__, chn);
 			chn_mask |= 1<<chn;
 
 			if (*e != ',') //"1,2,3"  逗号间隔
@@ -585,12 +585,14 @@ s32 upload_sg_proc(SSG_MSG_TYPE *pmsg, time_t tm, void *SnapData, unsigned int D
 					free(tmp);
 					tmp = NULL;
 				}
+				#if 0
 				else
 				{
 					printf("%s type :%d snap to base64 failed, pSnapData: %p, len: %d\n", \
 						__func__, pmsg->type, SnapData, DataSize);
 					strcat(msg_body, "\n");
 				}
+				#endif
 			#endif
 				
 				//len = strlen(msg_body);
@@ -805,7 +807,7 @@ s32 upload_sg_proc(SSG_MSG_TYPE *pmsg, time_t tm, void *SnapData, unsigned int D
 			if (p != NULL)
 			{
 				Gheart_interval_minute = atoi(p+strlen("Ticks Value=")+1);
-				printf("yg Gheart_interval_minute: %d\n", Gheart_interval_minute);
+				//printf("yg Gheart_interval_minute: %d\n", Gheart_interval_minute);
 			}
 
 			//处理监管平台主动调阅图像
@@ -824,7 +826,7 @@ s32 upload_sg_proc(SSG_MSG_TYPE *pmsg, time_t tm, void *SnapData, unsigned int D
 			}
 			else
 			{
-				printf("%s \"GUID\" not found\n", __func__);
+				//printf("%s \"GUID\" not found\n", __func__);
 				memset(SvrGuid, 0, sizeof(SvrGuid));
 			}
 		}
@@ -877,7 +879,7 @@ void UploadSGPlatformFxn(void *para)
 					printf("%s: read pipo failed\n", __FUNCTION__);
 					continue;
 				}
-				printf("%s msgtype: %d\n",__func__, msg.type);
+				//printf("%s msgtype: %d\n",__func__, msg.type);
 				upload_sg_proc(&msg, 0, NULL, 0, 0);//只处理消息，图片上传专门处理
 				/*
 				if ( ((msg.type >= EM_PIC_ALARM_LINK_UPLOAD) &&(msg.type <= EM_PIC_TEST_UPLOAD)) \

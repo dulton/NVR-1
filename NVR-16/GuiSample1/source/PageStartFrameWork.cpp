@@ -1161,7 +1161,8 @@ void CPageStartFrameWork::OnClkStartBtn()
 					m_pCursor->SetCursor(CR_WAIT);//csp modify
 					
 					this->Close();
-					
+
+					//printf("left: %d, right: %d\n", pbFloat.left, pbFloat.right);
 					m_pPagePlayBack->SetRect(&pbFloat,TRUE);
 					m_pPagePlayBack->Open();
 					

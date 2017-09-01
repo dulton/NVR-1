@@ -2842,7 +2842,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 	SPreviewFxnMsg PreviewMsg;
 	#endif
 
-	printf("%s chn%d, msg: %d\n", __func__, chn, msg);
+	//printf("%s chn%d, msg: %d\n", __func__, chn, msg);
 	
 	if(chn < 0 || chn >= (ARG_VI_NUM_MAX*2))
 	{
@@ -2868,7 +2868,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 				memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 				PreviewMsg.chn = chn + ARG_VI_NUM_MAX;
 				PreviewMsg.type = TypeStopChn;
-				printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
+				//printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
 
 				#ifdef	PreviewFxnPerChn
 				ret = WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueueChn[chn], (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
@@ -2932,7 +2932,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 			memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 			PreviewMsg.chn = chn + ARG_VI_NUM_MAX;
 			PreviewMsg.type = TypeStartChn;
-			printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
+			//printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
 
 			#ifdef	PreviewFxnPerChn
 			ret = WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueueChn[chn], (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
@@ -2988,7 +2988,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 				memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 				PreviewMsg.chn = chn;
 				PreviewMsg.type = TypeStopChn;
-				printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
+				//printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
 
 				#ifdef	PreviewFxnPerChn
 				ret = WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueueChn[chn], (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));
@@ -3052,7 +3052,7 @@ int DealStreamState(int chn, real_stream_state_e msg)
 			memset(&PreviewMsg, 0, sizeof(PreviewMsg));
 			PreviewMsg.chn = chn;
 			PreviewMsg.type = TypeStartChn;
-			printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
+			//printf("%s send msg[%d] chn%d, type: %d\n", __func__, chn, PreviewMsg.chn, PreviewMsg.type);
 
 			#ifdef	PreviewFxnPerChn
 			ret = WriteDataToBuf(&plib_gbl_info->PreviewFxnMsgQueueChn[chn], (u8 *)&PreviewMsg, sizeof(SPreviewFxnMsg));

@@ -481,6 +481,7 @@ HI_S32 SAMPLE_INNER_CODEC_CfgAudio(AUDIO_SAMPLE_RATE_E enSample, HI_BOOL bMicin)
     if (HI_TRUE == bMicin)
     {
 #if 1
+		printf("%s set audio in: mic\n", __func__);
         mixer_mic_ctrl = ACODEC_MIXER_MICIN;
         if (ioctl(fdAcodec, ACODEC_SET_MIXER_MIC, &mixer_mic_ctrl))
         {
@@ -721,6 +722,20 @@ void *audioThrFxn(void *arg)
 			usleep(1);
 			continue;
 		}
+
+		#if 0//debug
+		char file_name[32];
+		strcpy(file_name, "/mnt/debug.pcm");
+
+		FILE *fp = fopen(file_name, "a");
+		if(fp != NULL)
+		{
+			fwrite(audio_frame.data, audio_frame.len, 1, fp);
+			fclose(fp);
+			printf("%s write to file len: %d\n", __func__, audio_frame.len);
+		}
+		#endif
+		//printf("%s time_stamp: %llu\n", __func__, audio_frame.time_stamp);
 		
 		if(ret > 0 && audio_frame.channel == TL_AUDIO_CH_TALK_BACK)
 		{
@@ -774,9 +789,17 @@ int tl_audio_open(void)
 	{
 	#ifdef HI3535
 		VOIP_dev_id = 0;
+	
+		#if 1
 		VOIP_ch_id = 1;
-		NOIP_dev_id = 0;
 		max_ch = 2;
+		#else //Ô¾ÌìÐÂ°å
+		VOIP_ch_id = 0;
+		max_ch = 1;
+		#endif
+		
+		NOIP_dev_id = 0;
+		
 	#else
 		VOIP_dev_id = 1;
 		VOIP_ch_id = 0;
@@ -827,7 +850,8 @@ int tl_audio_open(void)
 		printf("lib_audio.c@audio_open: not support this type=%d\n", TL_HSLIB_TYPE);
 		return -1;
 	}
-	
+	printf("%s TL_HSLIB_TYPE: %d, VOIP_dev_id: %d, VOIP_ch_id: %d, NOIP_dev_id: %d, max_ch: %d\n", 
+		__func__, TL_HSLIB_TYPE, VOIP_dev_id, VOIP_ch_id, NOIP_dev_id, max_ch);
 	//csp modify 20140525
 	if(no_audio_chip)
 	{
@@ -836,7 +860,7 @@ int tl_audio_open(void)
 	}
 	
 	//#ifdef HI3535
-	//SAMPLE_INNER_CODEC_CfgAudio(AUDIO_SAMPLE_RATE_8000, HI_FALSE);
+	//SAMPLE_INNER_CODEC_CfgAudio(AUDIO_SAMPLE_RATE_8000, HI_TRUE);
 	//#endif
 	
 	stAioAttr.enSamplerate = AUDIO_SAMPLE_RATE_8000;
@@ -1140,6 +1164,7 @@ int tl_audio_enable(int channel)
 		ai_dev = VOIP_dev_id;
 		ai_ch = VOIP_ch_id;
 		
+		
 		//printf("rz_audio_enable:start voip\n");
 		
 		//csp modify 20140525
@@ -1324,7 +1349,7 @@ int tl_audio_disable(int channel)
 int tl_audio_out_sel(int channel)
 {
 	unsigned char chn = channel;
-	printf("%s: chn%d\n", __func__, channel);
+	//printf("%s: chn%d\n", __func__, channel);
 	
 	if(TL_HSLIB_TYPE == TL_BOARD_TYPE_NR2116 || 
 		TL_HSLIB_TYPE == TL_BOARD_TYPE_NR3116 || 

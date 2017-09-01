@@ -73,16 +73,6 @@ CButton::CButton(VD_PCRECT pRect, CPage * pParent, VD_PCSTR psz,CTRLPROC onClick
 
 }
 
-void CButton::SetTextColor(VD_COLORREF color, VD_BOOL redraw /* = FALSE */)
-{
-	m_TextColor = color;
-	if(redraw)
-	{
-		Draw();
-	}
-}
-
-
 CButton::CButton(VD_PCRECT pRect, CPage * pParent, VD_PCSTR psz,VD_IID vid,uint style, BOOL bPage)
 	:CItem(pRect, pParent, IT_BUTTON,style|styleEditable|styleAutoFocus)
 {
@@ -108,6 +98,15 @@ CButton::CButton(VD_PCRECT pRect, CPage * pParent, VD_PCSTR psz,CPage *pPage,uin
 
 CButton::~CButton()
 {
+}
+
+void CButton::SetTextColor(VD_COLORREF color, VD_BOOL redraw /* = FALSE */)
+{
+	m_TextColor = color;
+	if(redraw)
+	{
+		Draw();
+	}
 }
 
 void CButton::DrawCtrlButton(CTRL_STATE state /* = ctrlStateNormal */)

@@ -2676,7 +2676,7 @@ int read_snap_file(partition_index *index, u8 *pbuf, u16 nFileNo, u32 nOffset, u
 	//check_file_param(index, buf, nFileNo, nOffset, nSize);
 	
 	sprintf(filename,"%s/pic%05d.ifv", index->mountpath, nFileNo);
-	printf("%s filename: %s, offset: %d, size: %d\n", __func__, filename, nOffset, nSize);
+	//printf("%s filename: %s, offset: %d, size: %d\n", __func__, filename, nOffset, nSize);
 
 	pf = fopen(filename, "rb");
 	if(pf == NULL)

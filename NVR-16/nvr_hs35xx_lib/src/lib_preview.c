@@ -1238,10 +1238,11 @@ int tl_snap_vdec_write(u8 *pbuf, u32 nSize)
 	stStream.bEndOfFrame  = HI_TRUE;
 	stStream.bEndOfStream = HI_FALSE;       
 	s32Ret=HI_MPI_VDEC_SendStream(ARG_VO_NUM_MAX, &stStream, -1);
-        if (HI_SUCCESS != s32Ret)
-        {
+    if (HI_SUCCESS != s32Ret)
+    {
 		printf("%s: HI_MPI_VDEC_SendStream failed, ret: 0x%x\n", __func__, s32Ret);
-        }
+    }
+	
 	return s32Ret;
 }
 
