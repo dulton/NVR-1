@@ -329,7 +329,8 @@ CPagePlayBackFrameWork::CPagePlayBackFrameWork( VD_PCRECT pRect,VD_PCSTR psz /*=
 	{
 		pButton[i]->SetBitmap(pBmpButtonNormal[i], pBmpButtonSelect[i], pBmpButtonSelect[i]);
 	}
-	
+
+	//printf("%s 1\n", __func__);
 	rtTmp.left += 10+24;
 	i++;
 	rtTmp.right = rtTmp.left+ pRect->right - pRect->left - 82 - 2 * 34;

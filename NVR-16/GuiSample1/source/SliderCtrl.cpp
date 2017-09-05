@@ -46,7 +46,8 @@ m_onValueChanged(vproc)
 	}
 	else
 	{
-			tracker_width = m_Rect.Height()/2;
+		//printf("%s 1\n", __func__);
+		tracker_width = m_Rect.Height()/2;
 	}
 
 	if ((m_dwStyle & sliderNoNum) == sliderNoNum)
@@ -82,6 +83,7 @@ CSliderCtrl::~CSliderCtrl()
 
 CSliderCtrl* CreateSliderCtrl(VD_PCRECT pRect, CPage * pParent,int vmin /* = 0 */,int vmax /* = 100 */, CTRLPROC vproc /* = NULL */, int vstyle /* = 0 */, int nWheelStep /* = 1 */)
 {
+	//printf("%s %d, %d, %d, %d\n", __func__, pRect->left, pRect->right, pRect->top, pRect->bottom);
 	return new CSliderCtrl(pRect, pParent, vmin, vmax, vproc,vstyle,nWheelStep);
 }
 
@@ -393,6 +395,7 @@ void CSliderCtrl::DrawFrame()
 		//画边框
 		m_DC.SetRgnStyle(RS_HOLLOW);
 		m_DC.Rectangle(CRect(0,m_Rect.Height()/2-3,m_iSliderWidth,m_Rect.Height()/2+3), 1, 1);
+		//画游标
 		m_DC.SetRgnStyle(RS_NORMAL);
 		m_DC.Rectangle(CRect(tracker_offset,m_Rect.Height()/6,tracker_offset + tracker_width,m_Rect.Height()*5/6), 3, 3);
 
@@ -516,6 +519,7 @@ void CSliderCtrl::SetFocus(VD_BOOL flag)
 	
 void CSliderCtrl::Select(VD_BOOL flag)
 {
+	//printf("CSliderCtrl::Select\n");
 	ShowTip(flag);
 
 	SetFlag(IF_SELECTED, flag);
@@ -528,10 +532,15 @@ void CSliderCtrl::Select(VD_BOOL flag)
 
 int CSliderCtrl::GetAt(int px, int py)
 {
-	if(PtInRect(m_Rect, px, py)){
-		if(px < m_Rect.left + tracker_offset || px > m_Rect.left + tracker_offset + tracker_width){
+	if(PtInRect(m_Rect, px, py))
+	{
+		//是否在滑动块的区域内
+		if(px < m_Rect.left + tracker_offset || px > m_Rect.left + tracker_offset + tracker_width)
+		{
 			return SA_POSITION;
-		}else{
+		}
+		else
+		{
 			return SA_TRACK;
 		}
 	}
@@ -625,7 +634,7 @@ void CSliderCtrl::UpdateTracker()
 }
 void CSliderCtrl::SetDefaultBitmap(SliderCtrlBitmap region, VD_PCSTR name)
 {
-
+	printf("CSliderCtrl::SetDefaultBitmap region: %d\n");
 	switch(region) {
 	case SDB_RAIL_NORMAL:
 		bmp_slider_normal =VD_LoadBitmap(name);

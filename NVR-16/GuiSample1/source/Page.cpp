@@ -1516,6 +1516,8 @@ VD_BOOL CPage::MsgProc(uint msg, uint wpa, uint lpa)
 		if(!m_pChildFocus || !m_pChildFocus->GetFlag(IF_CAPTURED))//输入没有被捕获
 		{
 			pItem = GetItemAt(px, py);
+			//if (pItem)
+			//	printf("Page.cpp::%s: Item type: %d\n", __func__, pItem->m_iType);
 			SetSelectItem(pItem);
 		}
 		ret = m_pChildFocus?m_pChildFocus->MsgProc(msg, wpa, lpa):FALSE;

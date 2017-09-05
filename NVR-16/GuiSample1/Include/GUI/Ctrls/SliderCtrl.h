@@ -33,7 +33,7 @@ class CSliderCtrl : public CItem
 	int min;
 	int max;
 	int newpos;
-	int curpos;
+	int curpos;//[min, max]
 	int	editpos;	//ÐÞ¸Ä·ûÎ»ÖÃ
 	VD_BITMAP * m_pBmpNormal;
 	VD_BITMAP * m_pBmpElapsed;

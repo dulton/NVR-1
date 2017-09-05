@@ -176,7 +176,8 @@ CPageColorSetup::CPageColorSetup( VD_PCRECT pRect,VD_PCSTR psz /*= NULL*/,VD_BIT
 		{
 			pButton[i*2+1]->Enable(FALSE);
 		}
-		
+
+		//printf("%s 1\n", __func__);
 		rtTmp.left = rtTmp.right + 3;
 		rtTmp.right = rtTmp.left + 96;
 		pSlider[i] = CreateSliderCtrl(rtTmp,this,0, 255, (CTRLPROC)&CPageColorSetup::OnSliderChange, sliderNoNum);
