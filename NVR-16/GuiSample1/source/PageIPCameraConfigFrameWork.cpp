@@ -380,8 +380,8 @@ void CPageIPCameraConfigFrameWork::InitPage0()
 		}
 	}
 	
- 	printf("&&&&&&&&& count = %d &&&&&&&&\n",count);
-	printf("&&&&&&&&& count1 = %d &&&&&&&&\n",count1);
+ 	printf("&&&&&&&&& count = %d &&&&&&&&\n",count);//0
+	printf("&&&&&&&&& count1 = %d &&&&&&&&\n",count1);//37
 	
 	pScrollbar0[1] = CreateScrollBar(CRect(m_rtTable2.right,m_rtTable2.top,m_rtTable2.right+20,m_rtTable2.bottom),
                                 this,
