@@ -32,7 +32,7 @@ class CSliderCtrl : public CItem
 {
 	int min;
 	int max;
-	int newpos;
+	int newpos;//[min, max] 拖动游标使用
 	int curpos;//[min, max]
 	int	editpos;	//修改符位置
 	VD_BITMAP * m_pBmpNormal;
@@ -49,17 +49,14 @@ class CSliderCtrl : public CItem
 
 	VD_BOOL	track;			//正在滚动
 	int		tracker_width;	//滚动块宽度
-	int		tracker_offset;	//滚动块偏移
+	int		tracker_offset;	//滚动块偏移[0, m_iSliderWidth]
 	int		tracker_pick;	//点击滚动块时鼠标的相对位置
 
 	int 	m_nWheelStep; 
 
 	int m_iSliderWidth;
 	CTRLPROC m_onValueChanged;
-		enum _slider_act{	//动作
-	SA_POSITION = 0,
-		SA_TRACK,
-	};
+	
 protected:
 
 	static VD_BITMAP* bmp_slider_normal;
@@ -73,6 +70,10 @@ private:
 	void UpdateTracker();
 
 public:
+	enum _slider_act{	//动作
+		SA_POSITION = 0,
+		SA_TRACK,
+	};
 	CSliderCtrl(VD_PCRECT pRect, CPage * pParent,int vmin = 0,int vmax = 100, CTRLPROC vproc = NULL, int vstyle = 0, int nWheelStep = 1);
 	virtual ~CSliderCtrl();
 	void Draw();

@@ -28,6 +28,8 @@
 #include "Menu.h"
 #include "ProgressCtrl.h"
 #include "SliderCtrl.h"
+#include "SliderCtrlPartColor.h" //yaogang modify for playback 20170906
+
 #include "Static.h"
 #include "Edit.h"
 #include "TimingCtrl.h"

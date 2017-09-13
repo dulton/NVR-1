@@ -100,11 +100,11 @@ typedef struct
 	int mHeight;
 } Resv;
 
-typedef struct
-{
-	int Min;
-	int Max;
-} Range;
+//typedef struct
+//{
+//	int Min;
+//	int Max;
+//} Range;
 
 typedef struct
 {

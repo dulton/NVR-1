@@ -336,7 +336,10 @@ CPagePlayBackFrameWork::CPagePlayBackFrameWork( VD_PCRECT pRect,VD_PCSTR psz /*=
 	rtTmp.right = rtTmp.left+ pRect->right - pRect->left - 82 - 2 * 34;
 	m_pSlider = CreateSliderCtrl(CRect(rtTmp.left, rtTmp.top+5, 
 					rtTmp.right, rtTmp.top+17), this, 0, 100, (CTRLPROC)&CPagePlayBackFrameWork::OnSlider, sliderNoNum);
-
+	//m_pSlider = new CSliderCtrlPartColor(CRect(rtTmp.left, rtTmp.top+5, 
+	//				rtTmp.right, rtTmp.top+17), this, 0, 24*60*60, 24, (CTRLPROC)&CPagePlayBackFrameWork::OnSlider);
+	
+	
 	rtTmp.left = rtTmp.right + 7;
 
 	//printf("$$$$$$$$$$$$ i = %d\n",i);

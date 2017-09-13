@@ -217,7 +217,7 @@ VD_BOOL CSliderCtrl::MsgProc(uint msg, uint wpa, uint lpa)
 		}
 		break;
 
-	case XM_LBUTTONUP:
+	case XM_LBUTTONUP://拖动游标结束时
 		px = VD_HIWORD(lpa);
 		py = VD_LOWORD(lpa);
 		if(track){
@@ -229,7 +229,7 @@ VD_BOOL CSliderCtrl::MsgProc(uint msg, uint wpa, uint lpa)
 		}
 		break;
 		
-	case XM_MOUSEMOVE:
+	case XM_MOUSEMOVE://拖动游标时, curpos 不改变, tracker_offset 改变
 		px = VD_HIWORD(lpa);
 		py = VD_LOWORD(lpa);
 		if(track){
